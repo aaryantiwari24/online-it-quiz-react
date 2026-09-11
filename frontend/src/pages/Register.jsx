@@ -1,120 +1,248 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './Auth.css'
 
-// Backend's MIN_PASSWORD_LENGTH (authController.js) — mirrored here only
-// for early client-side feedback. The server is the real source of truth;
-// if that constant ever changes, update this to match.
-const MIN_PASSWORD_LENGTH = 8
+const MIN_PASSWORD_LENGTH = 6
 
-// Where an already-logged-in visitor of each role belongs. Mirrors
-// Login.jsx's own ROLE_HOME — duplicated rather than imported/shared,
-// matching this project's per-file self-containment convention (the
-// same choice every page-level CSS file already makes, per e.g.
-// Home.css's header comment).
 const ROLE_HOME = {
   admin: '/admin',
   supplier: '/supplier',
   customer: '/customer',
 }
 
+const ROLE_LABELS = {
+  customer: 'Student Register',
+  supplier: 'Supplier Register',
+}
+
+const LOGIN_LINKS = {
+  customer: '/login?role=customer',
+  supplier: '/login?role=supplier',
+}
+
 const Register = () => {
-  const { register, isAuthenticated, user, loading } = useAuth()
+  const {
+    register,
+    isAuthenticated,
+    user,
+    loading,
+  } = useAuth()
+
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const requestedRole = new URLSearchParams(
+    location.search
+  ).get('role')
+
+  /*
+   * Only customer and supplier are allowed
+   * to register publicly.
+   *
+   * Admin has no public registration.
+   */
+  const role =
+    requestedRole === 'supplier'
+      ? 'supplier'
+      : 'customer'
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Self-registration always creates role: 'customer' (see
-  // AuthContext.register) — but this effect also covers an already-
-  // authenticated visitor who simply lands on /register (stale link,
-  // typed URL, or an admin/supplier clicking the homepage's "Start Quiz"
-  // CTA — see PHASE_9_VERIFICATION.md's design decision #4). That visitor
-  // isn't necessarily a customer, so route by their real role like
-  // Login.jsx does rather than assuming /customer — hardcoding it sent
-  // an already-logged-in admin/supplier to a route ProtectedRoute would
-  // immediately bounce to "/" for wrong role. Phase 10 protected-route
-  // check.
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      navigate(ROLE_HOME[user.role] || '/customer', { replace: true })
+      navigate(
+        ROLE_HOME[user?.role] || '/',
+        { replace: true }
+      )
     }
-  }, [loading, isAuthenticated, user, navigate])
+  }, [
+    loading,
+    isAuthenticated,
+    user,
+    navigate,
+  ])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
     setError('')
+    setSuccess('')
+
+    if (name.trim().length < 2) {
+      setError(
+        'Name must contain at least 2 characters.'
+      )
+      return
+    }
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(
+        `Password must contain at least ${MIN_PASSWORD_LENGTH} characters.`
+      )
+      return
+    }
+
     setSubmitting(true)
+
     try {
-      await register(name, email, password)
-      // Redirect is handled by the effect above once isAuthenticated flips.
+      await register(
+        name,
+        email,
+        password,
+        role
+      )
+
+      /*
+       * Registration does NOT automatically log
+       * the user in.
+       *
+       * This matches the PHP version.
+       */
+      setSuccess(
+        'Registration successful! You can now login.'
+      )
+
+      setName('')
+      setEmail('')
+      setPassword('')
     } catch (err) {
-      setError(err.response?.data?.error || 'Something went wrong. Please try again.')
+      setError(
+        err.response?.data?.error ||
+          'Registration failed. Please try again.'
+      )
+    } finally {
       setSubmitting(false)
     }
   }
 
   return (
     <div className="auth-page">
-      <Link to="/" className="auth-brand">IT Quiz</Link>
+      <Link
+        to="/"
+        className="auth-brand"
+      >
+        IT Quiz
+      </Link>
+
       <div className="auth-card">
-        <h1>Student Register</h1>
+        <h1>
+          {ROLE_LABELS[role]}
+        </h1>
+
+        {role === 'supplier' && (
+          <p className="auth-subtitle">
+            Register to add and manage quiz questions.
+          </p>
+        )}
 
         {error && (
-          <p className="auth-error" role="alert">
+          <p
+            className="auth-error"
+            role="alert"
+          >
             {error}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} noValidate>
+        {success && (
+          <p
+            className="auth-success"
+            role="status"
+          >
+            {success}
+          </p>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <div className="auth-field">
-            <label htmlFor="register-name">Full Name</label>
+            <label htmlFor="register-name">
+              Full Name
+            </label>
+
             <input
               id="register-name"
               type="text"
               autoComplete="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) =>
+                setName(e.target.value)
+              }
               required
             />
           </div>
 
           <div className="auth-field">
-            <label htmlFor="register-email">Email Address</label>
+            <label htmlFor="register-email">
+              Email Address
+            </label>
+
             <input
               id="register-email"
               type="email"
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
               required
             />
           </div>
 
           <div className="auth-field">
-            <label htmlFor="register-password">Password</label>
+            <label htmlFor="register-password">
+              Password
+            </label>
+
             <input
               id="register-password"
               type="password"
               autoComplete="new-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
               minLength={MIN_PASSWORD_LENGTH}
+              required
             />
+
+            <small>
+              Minimum 6 characters
+            </small>
           </div>
 
-          <button type="submit" className="auth-submit" disabled={submitting}>
-            {submitting ? 'Creating Account…' : 'Register Account'}
+          <button
+            type="submit"
+            className="auth-submit"
+            disabled={submitting}
+          >
+            {submitting
+              ? 'Creating Account…'
+              : 'Register Account'}
           </button>
         </form>
 
         <p className="auth-switch">
-          Already have an account? <Link to="/login">Login here</Link>
+          Already have an account?{' '}
+
+          <Link
+            to={LOGIN_LINKS[role]}
+          >
+            Login here
+          </Link>
         </p>
       </div>
     </div>
