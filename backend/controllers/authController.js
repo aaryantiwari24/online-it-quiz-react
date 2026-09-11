@@ -2,10 +2,13 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 const User = require('../models/User')
-const { assertDbReady } = require('../config/db')
+const {
+  assertDbReady,
+} = require('../config/db')
 
 const PUBLIC_REGISTRATION_ROLES = [
   'customer',
+  'supplier',
 ]
 
 const EMAIL_REGEX =
@@ -39,20 +42,17 @@ const toSafeUser = (user) => ({
 })
 
 /*
- * CUSTOMER REGISTRATION
+ * REGISTER
  *
- * Matches the PHP customer_register.php flow:
+ * Public registration is allowed for:
  *
- * - name required
- * - email required
- * - password required
- * - valid email
- * - name minimum 2 characters
- * - password minimum 6 characters
- * - duplicate email rejected
- * - password hashed
- * - customer account created
- * - NO automatic login
+ * - customer
+ * - supplier
+ *
+ * Admin cannot register publicly.
+ *
+ * Registration does NOT automatically log
+ * the user in.
  */
 const register = async (
   req,
@@ -94,12 +94,15 @@ const register = async (
       return next(err)
     }
 
+    const normalizedName =
+      name.trim()
+
     if (
-      name.trim().length <
+      normalizedName.length <
       MIN_NAME_LENGTH
     ) {
       const err = new Error(
-        `Name must be at least ${MIN_NAME_LENGTH} characters`
+        `Name must contain at least ${MIN_NAME_LENGTH} characters.`
       )
 
       err.status = 400
@@ -124,7 +127,7 @@ const register = async (
       MIN_PASSWORD_LENGTH
     ) {
       const err = new Error(
-        `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+        `Password must contain at least ${MIN_PASSWORD_LENGTH} characters.`
       )
 
       err.status = 400
@@ -132,23 +135,29 @@ const register = async (
       return next(err)
     }
 
+    /*
+     * Default to customer if role isn't supplied.
+     */
+    const registrationRole =
+      role || 'customer'
+
+    /*
+     * Never allow admin through the
+     * public registration endpoint.
+     */
     if (
-      role &&
       !PUBLIC_REGISTRATION_ROLES.includes(
-        role
+        registrationRole
       )
     ) {
       const err = new Error(
-        'Only customer registration is allowed'
+        'Only customer and supplier registration is allowed'
       )
 
       err.status = 400
 
       return next(err)
     }
-
-    const normalizedName =
-      name.trim()
 
     const normalizedEmail =
       String(email)
@@ -161,7 +170,7 @@ const register = async (
       )
     ) {
       const err = new Error(
-        'A valid email address is required'
+        'Please enter a valid email address.'
       )
 
       err.status = 400
@@ -171,6 +180,12 @@ const register = async (
 
     assertDbReady()
 
+    /*
+     * Check email globally.
+     *
+     * This prevents the same email from being
+     * registered as another account.
+     */
     const existingUser =
       await User.findOne({
         email: normalizedEmail,
@@ -178,7 +193,7 @@ const register = async (
 
     if (existingUser) {
       const err = new Error(
-        'Email is already registered'
+        'Email is already registered.'
       )
 
       err.status = 400
@@ -197,15 +212,16 @@ const register = async (
         name: normalizedName,
         email: normalizedEmail,
         password: hashedPassword,
-        role: 'customer',
+        role: registrationRole,
         phone,
       })
 
     /*
      * IMPORTANT:
-     * Do NOT generate a JWT here.
      *
-     * The customer must log in separately.
+     * Do NOT create a JWT here.
+     *
+     * User must login after registration.
      */
     return res.status(201).json({
       message:
@@ -222,7 +238,7 @@ const register = async (
       err.code === 11000
     ) {
       err.message =
-        'Email is already registered'
+        'Email is already registered.'
 
       err.status = 400
     }
@@ -235,13 +251,10 @@ const register = async (
  * LOGIN
  *
  * Works for:
+ *
  * - customer
  * - supplier
  * - admin
- *
- * The frontend decides which role-specific
- * login was selected and verifies that the
- * returned account has the same role.
  */
 const login = async (
   req,
@@ -292,8 +305,8 @@ const login = async (
       })
 
     /*
-     * Same message whether email doesn't
-     * exist or password is incorrect.
+     * Don't reveal whether the email
+     * exists or not.
      */
     if (!user) {
       const err = new Error(

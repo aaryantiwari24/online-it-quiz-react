@@ -1,367 +1,230 @@
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 
-const User = require('../models/User')
-const {
-  assertDbReady,
-} = require('../config/db')
+import api from '../services/api'
 
-const PUBLIC_REGISTRATION_ROLES = [
-  'customer',
-  'supplier',
-]
+const AuthContext = createContext(null)
 
-const EMAIL_REGEX =
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const STORAGE_TOKEN_KEY = 'token'
+const STORAGE_USER_KEY = 'user'
 
-const MIN_PASSWORD_LENGTH = 6
-const MIN_NAME_LENGTH = 2
+const readStoredUser = () => {
+  try {
+    const raw =
+      localStorage.getItem(
+        STORAGE_USER_KEY
+      )
 
-const SALT_ROUNDS = 10
+    return raw
+      ? JSON.parse(raw)
+      : null
+  } catch {
+    return null
+  }
+}
 
-const generateToken = (user) =>
-  jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn:
-        process.env.JWT_EXPIRES_IN ||
-        '30d',
-    }
+const persistSession = (
+  token,
+  user
+) => {
+  localStorage.setItem(
+    STORAGE_TOKEN_KEY,
+    token
   )
 
-const toSafeUser = (user) => ({
-  id: user._id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  phone: user.phone || null,
-})
+  localStorage.setItem(
+    STORAGE_USER_KEY,
+    JSON.stringify(user)
+  )
+}
 
-/*
- * REGISTER
- *
- * Public registration is allowed for:
- *
- * - customer
- * - supplier
- *
- * Admin cannot register publicly.
- *
- * Registration does NOT automatically log
- * the user in.
- */
-const register = async (
-  req,
-  res,
-  next
-) => {
-  try {
-    const {
-      name,
-      email,
-      password,
-      role,
-      phone,
-    } = req.body
+const clearSession = () => {
+  localStorage.removeItem(
+    STORAGE_TOKEN_KEY
+  )
 
-    if (
-      !name ||
-      !email ||
-      !password
-    ) {
-      const err = new Error(
-        'Name, email, and password are required'
+  localStorage.removeItem(
+    STORAGE_USER_KEY
+  )
+}
+
+const AuthProvider = ({
+  children,
+}) => {
+  const [token, setToken] =
+    useState(() =>
+      localStorage.getItem(
+        STORAGE_TOKEN_KEY
       )
+    )
 
-      err.status = 400
+  const [user, setUser] =
+    useState(readStoredUser)
 
-      return next(err)
+  const [loading, setLoading] =
+    useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const verifyStoredToken =
+      async () => {
+        if (!token) {
+          setLoading(false)
+          return
+        }
+
+        try {
+          const { data } =
+            await api.get(
+              '/auth/me'
+            )
+
+          if (!cancelled) {
+            setUser(data.user)
+
+            localStorage.setItem(
+              STORAGE_USER_KEY,
+              JSON.stringify(
+                data.user
+              )
+            )
+          }
+        } catch {
+          if (!cancelled) {
+            clearSession()
+
+            setToken(null)
+            setUser(null)
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false)
+          }
+        }
+      }
+
+    verifyStoredToken()
+
+    return () => {
+      cancelled = true
     }
 
-    if (
-      typeof name !== 'string'
-    ) {
-      const err = new Error(
-        'Name must be a string'
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /*
+   * LOGIN
+   */
+  const login = async (
+    email,
+    password
+  ) => {
+    const { data } =
+      await api.post(
+        '/auth/login',
+        {
+          email,
+          password,
+        }
       )
 
-      err.status = 400
+    persistSession(
+      data.token,
+      data.user
+    )
 
-      return next(err)
-    }
+    setToken(data.token)
+    setUser(data.user)
 
-    const normalizedName =
-      name.trim()
-
-    if (
-      normalizedName.length <
-      MIN_NAME_LENGTH
-    ) {
-      const err = new Error(
-        `Name must contain at least ${MIN_NAME_LENGTH} characters.`
-      )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    if (
-      typeof password !== 'string'
-    ) {
-      const err = new Error(
-        'Password must be a string'
-      )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    if (
-      password.length <
-      MIN_PASSWORD_LENGTH
-    ) {
-      const err = new Error(
-        `Password must contain at least ${MIN_PASSWORD_LENGTH} characters.`
-      )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    /*
-     * Default to customer if role isn't supplied.
-     */
-    const registrationRole =
-      role || 'customer'
-
-    /*
-     * Never allow admin through the
-     * public registration endpoint.
-     */
-    if (
-      !PUBLIC_REGISTRATION_ROLES.includes(
-        registrationRole
-      )
-    ) {
-      const err = new Error(
-        'Only customer and supplier registration is allowed'
-      )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    const normalizedEmail =
-      String(email)
-        .trim()
-        .toLowerCase()
-
-    if (
-      !EMAIL_REGEX.test(
-        normalizedEmail
-      )
-    ) {
-      const err = new Error(
-        'Please enter a valid email address.'
-      )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    assertDbReady()
-
-    /*
-     * Check email globally.
-     *
-     * This prevents the same email from being
-     * registered as another account.
-     */
-    const existingUser =
-      await User.findOne({
-        email: normalizedEmail,
-      })
-
-    if (existingUser) {
-      const err = new Error(
-        'Email is already registered.'
-      )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    const hashedPassword =
-      await bcrypt.hash(
-        password,
-        SALT_ROUNDS
-      )
-
-    const user =
-      await User.create({
-        name: normalizedName,
-        email: normalizedEmail,
-        password: hashedPassword,
-        role: registrationRole,
-        phone,
-      })
-
-    /*
-     * IMPORTANT:
-     *
-     * Do NOT create a JWT here.
-     *
-     * User must login after registration.
-     */
-    return res.status(201).json({
-      message:
-        'Registration successful! You can now login.',
-      user: toSafeUser(user),
-    })
-  } catch (err) {
-    if (
-      err.name ===
-      'ValidationError'
-    ) {
-      err.status = 400
-    } else if (
-      err.code === 11000
-    ) {
-      err.message =
-        'Email is already registered.'
-
-      err.status = 400
-    }
-
-    next(err)
+    return data.user
   }
-}
 
-/*
- * LOGIN
- *
- * Works for:
- *
- * - customer
- * - supplier
- * - admin
- */
-const login = async (
-  req,
-  res,
-  next
-) => {
-  try {
-    const {
-      email,
-      password,
-    } = req.body
-
-    if (
-      !email ||
-      !password
-    ) {
-      const err = new Error(
-        'Email and password are required'
+  /*
+   * REGISTER
+   *
+   * role can be:
+   * - customer
+   * - supplier
+   *
+   * Registration does NOT create a session.
+   */
+  const register = async (
+    name,
+    email,
+    password,
+    role = 'customer'
+  ) => {
+    const { data } =
+      await api.post(
+        '/auth/register',
+        {
+          name,
+          email,
+          password,
+          role,
+        }
       )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    if (
-      typeof password !== 'string'
-    ) {
-      const err = new Error(
-        'Password must be a string'
-      )
-
-      err.status = 400
-
-      return next(err)
-    }
-
-    const normalizedEmail =
-      String(email)
-        .trim()
-        .toLowerCase()
-
-    assertDbReady()
-
-    const user =
-      await User.findOne({
-        email: normalizedEmail,
-      })
 
     /*
-     * Don't reveal whether the email
-     * exists or not.
+     * DO NOT call persistSession().
+     *
+     * The user must login separately.
      */
-    if (!user) {
-      const err = new Error(
-        'Invalid email or password'
-      )
-
-      err.status = 401
-
-      return next(err)
-    }
-
-    const isMatch =
-      await bcrypt.compare(
-        password,
-        user.password
-      )
-
-    if (!isMatch) {
-      const err = new Error(
-        'Invalid email or password'
-      )
-
-      err.status = 401
-
-      return next(err)
-    }
-
-    const token =
-      generateToken(user)
-
-    return res.status(200).json({
-      token,
-      user: toSafeUser(user),
-    })
-  } catch (err) {
-    next(err)
+    return data
   }
+
+  /*
+   * LOGOUT
+   */
+  const logout = () => {
+    clearSession()
+
+    setToken(null)
+    setUser(null)
+  }
+
+  const value = {
+    user,
+    token,
+
+    isAuthenticated:
+      Boolean(token && user),
+
+    loading,
+
+    login,
+    register,
+    logout,
+  }
+
+  return (
+    <AuthContext.Provider
+      value={value}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-/*
- * GET CURRENT USER
- */
-const getMe = (
-  req,
-  res
-) => {
-  return res.status(200).json({
-    user: toSafeUser(
-      req.user
-    ),
-  })
+const useAuth = () => {
+  const ctx =
+    useContext(AuthContext)
+
+  if (!ctx) {
+    throw new Error(
+      'useAuth must be used within an AuthProvider'
+    )
+  }
+
+  return ctx
 }
 
-module.exports = {
-  register,
-  login,
-  getMe,
+export {
+  AuthProvider,
+  useAuth,
 }
