@@ -1,0 +1,128 @@
+.certificate-page {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.certificate-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.certificate-sheet {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 56px 48px;
+  text-align: center;
+  /* Double border reads as a certificate border, not just a card —
+     inset from the card edge so it doesn't collide with the outer
+     border/shadow already provided by the shared .card-like styling
+     above. */
+  outline: 1px solid var(--color-brand-soft);
+  outline-offset: -14px;
+}
+
+.certificate-eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-brand);
+}
+
+.certificate-title {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  margin: 8px 0 4px;
+}
+
+.certificate-subtitle {
+  margin: 0 0 32px;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+}
+
+.certificate-presented-to-label {
+  margin: 0;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+}
+
+.certificate-recipient {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  margin: 6px 0 0;
+  color: var(--color-ink);
+}
+
+.certificate-divider {
+  width: 80px;
+  height: 3px;
+  background: var(--color-brand);
+  border-radius: 2px;
+  margin: 28px auto;
+}
+
+.certificate-body-text {
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.7;
+  color: var(--color-ink);
+}
+
+.certificate-meta-row {
+  display: flex;
+  justify-content: center;
+  gap: 56px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.certificate-meta-label {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-soft);
+}
+
+.certificate-meta-value {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* ---------- Print ---------- */
+
+@media print {
+  /* Hide everything except the certificate sheet itself — the sidebar,
+     topbar, back/print buttons, and page padding all belong to the app
+     shell, not the document being printed. CustomerLayout.jsx's own
+     elements are targeted by class directly rather than relying on
+     print-context React state, since a plain CSS rule here is simpler
+     and doesn't need this component to know anything about the layout
+     that wraps it. */
+  .customer-sidebar,
+  .customer-topbar,
+  .customer-drawer-backdrop,
+  .customer-skip-link,
+  .certificate-page-actions {
+    display: none !important;
+  }
+
+  .customer-content {
+    padding: 0 !important;
+  }
+
+  .certificate-sheet {
+    box-shadow: none;
+    border: none;
+    outline: 2px solid #333;
+    outline-offset: -14px;
+  }
+}

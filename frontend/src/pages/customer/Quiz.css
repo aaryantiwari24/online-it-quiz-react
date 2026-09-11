@@ -1,0 +1,282 @@
+/* ---------------------------------------------------------------------
+   Phase 6 — quiz-attempt screen only. Imports Customer.css's shared
+   .card/.btn/.status-pill classes are assumed already loaded (QuizAttempt.jsx
+   imports both files, Customer.css first) rather than redeclared here.
+   --------------------------------------------------------------------- */
+
+.quiz-attempt {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ---------- Header / timer ---------- */
+
+.quiz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.quiz-header-title {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.quiz-header-meta {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+/* ---------- Progress bar ---------- */
+/* Same track/fill pattern as the homepage hero's decorative quiz-card
+   mockup (Home.css's .home-hero-quiz-card-progress) — this is the real,
+   functional version of what that preview only illustrates. Reflects how
+   far the learner has navigated through the question set (currentIndex),
+   not how many are answered — the Question Map + its "X/Y answered"
+   counter already own that second signal. */
+
+.quiz-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: var(--color-brand);
+  transition: width 0.2s ease;
+}
+
+.quiz-timer {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  min-width: 84px;
+  text-align: center;
+}
+
+.quiz-timer--warning {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  animation: quiz-timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes quiz-timer-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ---------- Body layout: question card + map sidebar ---------- */
+
+.quiz-body {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .quiz-body {
+    grid-template-columns: 1fr;
+  }
+
+  /* Map becomes a horizontally-scrollable strip above the question on
+     mobile rather than a full-width block pushed below the answer
+     options, so it stays reachable without scrolling past the question. */
+  .quiz-map-card {
+    order: -1;
+  }
+}
+
+/* ---------- Question card ---------- */
+
+.quiz-question-card {
+  min-width: 0;
+}
+
+.quiz-question-text {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.quiz-options {
+  border: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-options-legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.quiz-option:hover {
+  background: var(--color-canvas);
+}
+
+.quiz-option:has(input:checked) {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.quiz-option input[type='radio'] {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-brand);
+  flex-shrink: 0;
+}
+
+.quiz-option-key {
+  font-weight: 700;
+  color: var(--color-ink-soft);
+  flex-shrink: 0;
+  width: 16px;
+}
+
+.quiz-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---------- Question map ---------- */
+
+.quiz-map-card {
+  position: sticky;
+  top: 20px;
+}
+
+.quiz-map-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.quiz-map-title span {
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.quiz-map-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.quiz-map-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.quiz-map-cell:hover {
+  border-color: var(--color-brand);
+}
+
+.quiz-map-cell--answered {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: #fff;
+}
+
+.quiz-map-cell--current {
+  border-color: var(--color-brand-dark);
+  border-width: 2px;
+}
+
+/* ---------- Map legend ---------- */
+
+.quiz-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--color-ink-soft);
+}
+
+.quiz-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quiz-map-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.quiz-map-legend-swatch--answered {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.quiz-map-legend-swatch--current {
+  border: 2px solid var(--color-brand-dark);
+}
+
+@media (max-width: 760px) {
+  .quiz-map-card {
+    position: static;
+  }
+
+  .quiz-map-grid {
+    grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  }
+}

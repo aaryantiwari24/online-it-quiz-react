@@ -1,0 +1,622 @@
+/* ---------------------------------------------------------------------
+   Phase 8 — shared supplier-area styles.
+
+   Copied wholesale from pages/admin/Admin.css with every .admin-* class
+   renamed to .supplier-* — the same "duplicate, don't import" convention
+   Admin.css's own header comment documents (it duplicates Customer.css
+   rather than importing it), per this phase's build-prompt Section 4
+   instruction to treat /supplier/* as a sibling of /admin/*, not a new
+   design language. Same design tokens from index.css, same shell/
+   button/card/pill treatment as both other role areas — self-contained
+   so /supplier/* never depends on admin or customer code having loaded
+   first.
+
+   Forms and Tables sections exist here for the same reason they exist in
+   Admin.css: My Questions and Add Question run a create/edit form and a
+   filterable table, same shape as Admin's Manage Categories/Manage
+   Questions did first.
+   --------------------------------------------------------------------- */
+
+/* ---------- Shell / layout ---------- */
+
+.supplier-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-canvas);
+}
+
+.supplier-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--color-brand);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  z-index: 100;
+}
+
+.supplier-skip-link:focus {
+  left: 12px;
+  top: 12px;
+}
+
+/* ---------- Sidebar (desktop) / drawer (mobile) ---------- */
+
+.supplier-sidebar {
+  width: 264px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.supplier-sidebar-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--color-ink);
+  padding: 0 12px 20px;
+}
+
+.supplier-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.supplier-nav-link {
+  display: block;
+  padding: 11px 14px;
+  border-radius: var(--radius-control);
+  color: var(--color-ink-soft);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.supplier-nav-link:hover {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+.supplier-nav-link--active {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-dark);
+}
+
+.supplier-sidebar-footer {
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.supplier-sidebar-user {
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.supplier-sidebar-user-name {
+  font-weight: 700;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.supplier-sidebar-user-email {
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Topbar (mobile only) ---------- */
+
+.supplier-topbar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.supplier-topbar-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.supplier-menu-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.supplier-menu-icon,
+.supplier-menu-icon::before,
+.supplier-menu-icon::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--color-ink);
+  border-radius: 2px;
+}
+
+.supplier-menu-icon {
+  position: relative;
+}
+
+.supplier-menu-icon::before,
+.supplier-menu-icon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+}
+
+.supplier-menu-icon::before {
+  top: -5px;
+}
+
+.supplier-menu-icon::after {
+  top: 5px;
+}
+
+.supplier-drawer-backdrop {
+  display: none;
+}
+
+/* ---------- Main content ---------- */
+
+.supplier-content {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+}
+
+.supplier-content:focus {
+  outline: none;
+}
+
+.supplier-page-header {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.supplier-page-header h1 {
+  font-size: 1.6rem;
+}
+
+.supplier-page-header p {
+  color: var(--color-ink-soft);
+  margin: 6px 0 0;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 860px) {
+  .supplier-topbar {
+    display: flex;
+  }
+
+  .supplier-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 40;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-card);
+  }
+
+  .supplier-sidebar--open {
+    transform: translateX(0);
+  }
+
+  .supplier-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 21, 43, 0.4);
+    border: none;
+    z-index: 30;
+    cursor: pointer;
+  }
+
+  .supplier-content {
+    padding: 20px 16px 32px;
+  }
+}
+
+/* ---------- Buttons (duplicated from Admin.css — see file header) ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-brand-dark);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-canvas);
+}
+
+.btn--danger-ghost {
+  background: transparent;
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.btn--danger-ghost:hover:not(:disabled) {
+  background: var(--color-danger-soft);
+}
+
+.btn--sm {
+  padding: 7px 14px;
+  font-size: 0.85rem;
+}
+
+.btn--full {
+  width: 100%;
+}
+
+/* ---------- Cards (duplicated from Admin.css) ---------- */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+}
+
+.card--flat {
+  box-shadow: none;
+}
+
+/* ---------- Status / difficulty pills (duplicated from Admin.css) ---------- */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.status-pill--pass {
+  background: rgba(31, 157, 108, 0.12);
+  color: var(--color-success);
+}
+
+.status-pill--fail {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.status-pill--easy {
+  background: rgba(31, 157, 108, 0.12);
+  color: var(--color-success);
+}
+
+.status-pill--medium {
+  background: rgba(214, 158, 46, 0.14);
+  color: #a3690f;
+}
+
+.status-pill--hard {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.status-pill--neutral {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-dark);
+}
+
+/* ---------- Empty states (duplicated from Admin.css) ---------- */
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--color-ink-soft);
+}
+
+.empty-state h3 {
+  color: var(--color-ink);
+  margin-bottom: 8px;
+}
+
+/* ---------- Generic grid ---------- */
+
+.supplier-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.supplier-grid--stats {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* ---------- Stat cards (DashboardOverview) ---------- */
+
+.supplier-stat-label {
+  margin: 0;
+  color: var(--color-ink-soft);
+  font-size: 0.85rem;
+}
+
+.supplier-stat-value {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ---------- Toolbar / filters ---------- */
+
+.supplier-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.supplier-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.supplier-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.supplier-filter-field label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+.supplier-filter-field select {
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-width: 180px;
+}
+
+/* ---------- Forms (create/edit panels) ---------- */
+
+.supplier-form {
+  margin-bottom: 24px;
+}
+
+.supplier-form h2 {
+  font-size: 1.05rem;
+  margin-bottom: 16px;
+}
+
+.supplier-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.supplier-field {
+  margin-bottom: 16px;
+}
+
+.supplier-field label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.supplier-field input,
+.supplier-field select,
+.supplier-field textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.supplier-field textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.supplier-field input:focus,
+.supplier-field select:focus,
+.supplier-field textarea:focus {
+  border-color: var(--color-brand);
+  outline: none;
+}
+
+.supplier-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.supplier-inline-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-control);
+  margin: 0 0 1.25rem;
+}
+
+/* ---------- Tables ---------- */
+
+.supplier-table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.supplier-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.supplier-table th {
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-canvas);
+}
+
+.supplier-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.supplier-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.supplier-table-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ---------- Mobile: table -> stacked cards ---------- */
+
+@media (max-width: 700px) {
+  .supplier-table thead {
+    display: none;
+  }
+
+  .supplier-table,
+  .supplier-table tbody,
+  .supplier-table tr,
+  .supplier-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .supplier-table tr {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .supplier-table td {
+    border-bottom: none;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .supplier-table td::before {
+    content: attr(data-label);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .supplier-table-actions {
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+
+  .supplier-table-actions::before {
+    content: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .supplier-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

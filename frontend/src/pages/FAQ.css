@@ -1,0 +1,76 @@
+/* ---------------------------------------------------------------------
+   Phase 10 — public FAQ page styles ("/faq", pages/FAQ.jsx).
+
+   Deliberately thin: FAQ.jsx already imports Home.css for the navbar,
+   footer, and the .home-section/.card/.empty-state shell, so this file
+   only adds what's genuinely new — the question/answer accordion. Uses
+   index.css's tokens directly (--color-*, --radius-*, --font-*), the
+   same as every other page-level stylesheet in this project.
+   --------------------------------------------------------------------- */
+
+.faq-list {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.faq-item {
+  padding: 0;
+  overflow: hidden;
+}
+
+.faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.faq-question[aria-expanded='true'] {
+  color: var(--color-brand);
+}
+
+.faq-toggle-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-brand-soft);
+  color: var(--color-brand-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.faq-answer {
+  margin: 0;
+  padding: 0 24px 22px;
+  color: var(--color-ink-soft);
+  line-height: 1.65;
+}
+
+@media (max-width: 600px) {
+  .faq-question {
+    padding: 16px 18px;
+    font-size: 0.95rem;
+  }
+
+  .faq-answer {
+    padding: 0 18px 18px;
+  }
+}

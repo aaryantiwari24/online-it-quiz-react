@@ -1,0 +1,73 @@
+/* Phase 0: bare reset only. No colors/fonts/theme decisions yet —
+   those come later once actual UI is being built. */
+
+* {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------
+   Phase 5 — design tokens.
+
+   First real UI phase (Login/Register), so this is where the app's visual
+   identity starts. context.md Section 2 pins down the brand color family
+   ("indigo/purple" CTAs) and recurring patterns (full-width buttons/rows
+   inside cards, rounded pill status badges) that later phases (6-10) will
+   need too — defined once here as shared tokens instead of being
+   reinvented per phase, the same "decide once, reuse everywhere" spirit
+   as the locked decisions in coding-phases.md.
+
+   --font-mono is declared but unused so far (system stack, no webfont
+   import) — reserved for the quiz timer, certificate number, and score
+   displays in later phases, where a technical/data feel actually earns
+   its place. Login/Register have no data-like values to set in it.
+   ------------------------------------------------------------------- */
+:root {
+  --color-ink: #14152b;
+  --color-ink-soft: #5b5c74;
+  --color-brand: #5a42e8;
+  --color-brand-dark: #4530c4;
+  --color-brand-soft: #eeebfc;
+  --color-canvas: #f6f5fb;
+  --color-surface: #ffffff;
+  --color-border: #e3e1f0;
+  --color-danger: #d33a4b;
+  --color-danger-soft: #fbe9eb;
+  --color-success: #1f9d6c;
+  --color-success-dark: #188457;
+
+  --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-body: 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
+
+  --radius-card: 20px;
+  --radius-control: 10px;
+
+  /* Tinted toward the brand hue rather than neutral grey, so cards read
+     as "lifted" without the generic same-grey-shadow-on-every-card look. */
+  --shadow-card: 0 1px 2px rgba(20, 21, 43, 0.04), 0 16px 32px -12px rgba(90, 66, 232, 0.16);
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+a {
+  color: var(--color-brand);
+}
+
+/* Visible keyboard focus everywhere, instead of the browser default or
+   (worse) a suppressed outline — a plain color swap is enough since every
+   focusable element in this app is already high-contrast against its
+   background. */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}

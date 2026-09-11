@@ -1,0 +1,125 @@
+/* Shared layout for Login.jsx and Register.jsx — both use the same
+   "centered, minimal card" pattern from context.md Section 2's Student
+   Register screen. Built entirely on the design tokens defined in
+   index.css rather than one-off colors, so later phases' auth-adjacent
+   UI (e.g. a "My Profile" form) can reuse these same classes/tokens. */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.auth-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--color-brand);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 2.5rem;
+}
+
+.auth-card h1 {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.auth-field {
+  margin-bottom: 1.25rem;
+}
+
+.auth-field label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.auth-field input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.auth-field input:focus {
+  border-color: var(--color-brand);
+}
+
+.auth-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-control);
+  margin: 0 0 1.25rem;
+}
+
+.auth-submit {
+  width: 100%;
+  padding: 0.8rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  color: #ffffff;
+  background: var(--color-brand);
+  border: none;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: var(--color-brand-dark);
+}
+
+.auth-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-ink-soft);
+  margin: 1.5rem 0 0;
+}
+
+/* ---------- Mobile ----------
+   Every other page picked up at least one breakpoint during its own
+   phase (Customer.css's sidebar->drawer switch, Admin/Supplier's
+   table->card conversion, Quiz.css's map strip); this was the one
+   page-level file that never got one. The card was never actually
+   broken at narrow widths — width: 100% + max-width: 420px plus the
+   global box-sizing: border-box in index.css already stop it from
+   overflowing — this just trims the padding on small phones, where
+   2.5rem inner + 1.5rem outer padding was eating a disproportionate
+   share of the viewport. Phase 10 responsive check. */
+@media (max-width: 480px) {
+  .auth-page {
+    padding: 1.25rem 1rem;
+  }
+
+  .auth-card {
+    padding: 1.75rem 1.5rem;
+  }
+}
