@@ -25,10 +25,7 @@ const ROLE_REGISTER = {
 }
 
 const Login = () => {
-  const {
-    login,
-    logout,
-  } = useAuth()
+  const { login, logout } = useAuth()
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -67,10 +64,8 @@ const Login = () => {
         password
       )
 
-      /*
-       * Make sure the account matches
-       * the selected login type.
-       */
+      // Check that the account matches
+      // the selected login type.
       if (loggedInUser.role !== role) {
         logout()
 
@@ -84,21 +79,15 @@ const Login = () => {
         return
       }
 
-      /*
-       * ONLY successful login reaches here.
-       */
+      // Login was successful.
+      // Only now redirect to the dashboard.
       navigate(
         ROLE_HOME[loggedInUser.role],
         { replace: true }
       )
-
     } catch (err) {
-      /*
-       * FAILED LOGIN:
-       *
-       * Stay on this page.
-       * Do NOT navigate.
-       */
+      // Login failed.
+      // Stay on the login page.
       setError(
         err.response?.data?.error ||
         err.response?.data?.message ||
@@ -111,7 +100,6 @@ const Login = () => {
 
   return (
     <div className="auth-page">
-
       <Link
         to="/"
         className="auth-brand"
@@ -120,7 +108,6 @@ const Login = () => {
       </Link>
 
       <div className="auth-card">
-
         <h1>
           {ROLE_LABELS[role]}
         </h1>
@@ -138,7 +125,6 @@ const Login = () => {
           onSubmit={handleSubmit}
           noValidate
         >
-
           <div className="auth-field">
             <label htmlFor="login-email">
               Email Address
@@ -182,7 +168,6 @@ const Login = () => {
               ? 'Logging In…'
               : 'Log In'}
           </button>
-
         </form>
 
         {role !== 'admin' && (
@@ -196,7 +181,6 @@ const Login = () => {
             </Link>
           </p>
         )}
-
       </div>
     </div>
   )

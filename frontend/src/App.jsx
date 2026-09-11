@@ -1,260 +1,254 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 
-import { AuthProvider } from './context/AuthContext'
-
-import ProtectedRoute from './components/shared/ProtectedRoute'
-
+// Public pages
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
-
-/* =========================
-   CUSTOMER
-========================= */
-
-import CustomerLayout from './components/customer/CustomerLayout'
-import Dashboard from './pages/customer/Dashboard'
-import QuizList from './pages/customer/QuizList'
-import QuizDifficulty from './pages/customer/QuizDifficulty'
-import QuizAttempt from './pages/customer/QuizAttempt'
-import Results from './pages/customer/Results'
-import Certificate from './pages/customer/Certificate'
-import History from './pages/customer/History'
-import Profile from './pages/customer/Profile'
-
-
-/* =========================
-   ADMIN
-========================= */
-
+// Admin
 import AdminLayout from './components/admin/AdminLayout'
-import AdminDashboard from './pages/admin/DashboardOverview'
-import ManageCategories from './pages/admin/ManageCategories'
-import ManageQuestions from './pages/admin/ManageQuestions'
+import DashboardOverview from './pages/admin/DashboardOverview'
+import ManageCustomers from './pages/admin/ManageCustomers'
 import ManageSuppliers from './pages/admin/ManageSuppliers'
+import ManageCategories from './pages/admin/ManageCategories'
 import AllResults from './pages/admin/AllResults'
+import ManageCertificates from './pages/admin/ManageCertificates'
+import AdminProfile from './pages/admin/AdminProfile'
 
-
-/* =========================
-   SUPPLIER
-========================= */
-
+// Supplier
 import SupplierLayout from './components/supplier/SupplierLayout'
 import SupplierDashboardOverview from './pages/supplier/DashboardOverview'
 import MyQuestions from './pages/supplier/MyQuestions'
 import AddQuestion from './pages/supplier/AddQuestion'
 import SupplierProfile from './pages/supplier/Profile'
 
+// Customer
+import CustomerLayout from './components/customer/CustomerLayout'
+import CustomerDashboardOverview from './pages/customer/Dashboard'
+import QuizCategories from './pages/customer/QuizList'
+import QuizDifficulty from './pages/customer/QuizDifficulty'
+import Quiz from './pages/customer/QuizAttempt'
+import Result from './pages/customer/Results'
+import Certificate from './pages/customer/Certificate'
+import History from './pages/customer/History'
+import CustomerProfile from './pages/customer/Profile'
+
+// Shared
+import ProtectedRoute from './components/shared/ProtectedRoute'
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <Routes>
+      {/* ==================== PUBLIC ==================== */}
 
-          {/* =========================
-              PUBLIC
-          ========================= */}
+      <Route path="/" element={<Home />} />
 
+      <Route
+        path="/login"
+        element={<Login />}
+      />
+
+      <Route
+        path="/register"
+        element={<Register />}
+      />
+
+
+      {/* ==================== ADMIN ==================== */}
+
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={['admin']} />
+        }
+      >
+        <Route
+          path="/admin"
+          element={<AdminLayout />}
+        >
           <Route
-            path="/"
-            element={<Home />}
+            index
+            element={
+              <DashboardOverview />
+            }
           />
 
           <Route
-            path="/login"
-            element={<Login />}
+            path="dashboard"
+            element={
+              <DashboardOverview />
+            }
           />
 
           <Route
-            path="/register"
-            element={<Register />}
+            path="customers"
+            element={
+              <ManageCustomers />
+            }
           />
 
-
-          {/* =========================
-              ADMIN
-          ========================= */}
+          <Route
+            path="suppliers"
+            element={
+              <ManageSuppliers />
+            }
+          />
 
           <Route
-            path="/admin"
+            path="categories"
             element={
-              <ProtectedRoute
-                allowedRoles={['admin']}
-              />
+              <ManageCategories />
             }
-          >
-            <Route element={<AdminLayout />}>
-
-              <Route
-                index
-                element={
-                  <Navigate
-                    to="dashboard"
-                    replace
-                  />
-                }
-              />
-
-              <Route
-                path="dashboard"
-                element={<AdminDashboard />}
-              />
-
-              <Route
-                path="categories"
-                element={<ManageCategories />}
-              />
-
-              <Route
-                path="questions"
-                element={<ManageQuestions />}
-              />
-
-              <Route
-                path="suppliers"
-                element={<ManageSuppliers />}
-              />
-
-              <Route
-                path="results"
-                element={<AllResults />}
-              />
-
-            </Route>
-          </Route>
-
-
-          {/* =========================
-              SUPPLIER
-          ========================= */}
+          />
 
           <Route
-            path="/supplier"
+            path="results"
             element={
-              <ProtectedRoute
-                allowedRoles={['supplier']}
-              />
+              <AllResults />
             }
-          >
-            <Route element={<SupplierLayout />}>
-
-              <Route
-                index
-                element={
-                  <Navigate
-                    to="dashboard"
-                    replace
-                  />
-                }
-              />
-
-              <Route
-                path="dashboard"
-                element={
-                  <SupplierDashboardOverview />
-                }
-              />
-
-              <Route
-                path="questions"
-                element={<MyQuestions />}
-              />
-
-              <Route
-                path="add-question"
-                element={<AddQuestion />}
-              />
-
-              <Route
-                path="profile"
-                element={<SupplierProfile />}
-              />
-
-            </Route>
-          </Route>
-
-
-          {/* =========================
-              CUSTOMER
-          ========================= */}
+          />
 
           <Route
-            path="/customer"
+            path="certificates"
             element={
-              <ProtectedRoute
-                allowedRoles={['customer']}
-              />
+              <ManageCertificates />
             }
-          >
-            <Route element={<CustomerLayout />}>
+          />
 
-              <Route
-                index
-                element={
-                  <Navigate
-                    to="dashboard"
-                    replace
-                  />
-                }
-              />
+          <Route
+            path="profile"
+            element={
+              <AdminProfile />
+            }
+          />
+        </Route>
+      </Route>
 
-              <Route
-                path="dashboard"
-                element={<Dashboard />}
-              />
 
-              <Route
-                path="quizzes"
-                element={<QuizList />}
-              />
+      {/* ==================== SUPPLIER ==================== */}
 
-              {/* IMPORTANT:
-                  Category → Difficulty selection
-              */}
-              <Route
-                path="quiz-difficulty/:categoryId"
-                element={<QuizDifficulty />}
-              />
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={['supplier']} />
+        }
+      >
+        <Route
+          path="/supplier"
+          element={<SupplierLayout />}
+        >
+          <Route
+            index
+            element={
+              <SupplierDashboardOverview />
+            }
+          />
 
-              {/* Actual quiz */}
-              <Route
-                path="quiz/:categoryId/:difficulty"
-                element={<QuizAttempt />}
-              />
+          <Route
+            path="dashboard"
+            element={
+              <SupplierDashboardOverview />
+            }
+          />
 
-              <Route
-                path="results/:id"
-                element={<Results />}
-              />
+          <Route
+            path="questions"
+            element={
+              <MyQuestions />
+            }
+          />
 
-              <Route
-                path="certificate/:resultId"
-                element={<Certificate />}
-              />
+          <Route
+            path="add-question"
+            element={
+              <AddQuestion />
+            }
+          />
 
-              <Route
-                path="history"
-                element={<History />}
-              />
+          <Route
+            path="profile"
+            element={
+              <SupplierProfile />
+            }
+          />
+        </Route>
+      </Route>
 
-              <Route
-                path="profile"
-                element={<Profile />}
-              />
 
-            </Route>
-          </Route>
+      {/* ==================== CUSTOMER ==================== */}
 
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={['customer']} />
+        }
+      >
+        <Route
+          path="/customer"
+          element={<CustomerLayout />}
+        >
+          <Route
+            index
+            element={
+              <CustomerDashboardOverview />
+            }
+          />
+
+          <Route
+            path="dashboard"
+            element={
+              <CustomerDashboardOverview />
+            }
+          />
+
+          <Route
+            path="quizzes"
+            element={
+              <QuizCategories />
+            }
+          />
+
+          <Route
+            path="quiz-difficulty/:categoryId"
+            element={
+              <QuizDifficulty />
+            }
+          />
+
+          <Route
+            path="quiz/:categoryId/:difficulty"
+            element={
+              <Quiz />
+            }
+          />
+
+          <Route
+            path="results/:id"
+            element={
+              <Result />
+            }
+          />
+
+          <Route
+            path="certificate/:resultId"
+            element={
+              <Certificate />
+            }
+          />
+
+          <Route
+            path="history"
+            element={
+              <History />
+            }
+          />
+
+          <Route
+            path="profile"
+            element={
+              <CustomerProfile />
+            }
+          />
+        </Route>
+      </Route>
+    </Routes>
   )
 }
 

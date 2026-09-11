@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import api from '../../services/api'
 import './Admin.css'
 
-const ManageSuppliers = () => {
-  const [suppliers, setSuppliers] = useState(null)
+const ManageCustomers = () => {
+  const [customers, setCustomers] = useState(null)
   const [loadError, setLoadError] = useState('')
   const [rowError, setRowError] = useState('')
   const [deletingId, setDeletingId] = useState(null)
@@ -11,37 +11,37 @@ const ManageSuppliers = () => {
   useEffect(() => {
     let cancelled = false
 
-    const loadSuppliers = async () => {
+    const loadCustomers = async () => {
       try {
         setLoadError('')
 
         const { data } = await api.get('/users', {
-          params: { role: 'supplier' },
+          params: { role: 'customer' },
         })
 
         if (!cancelled) {
-          setSuppliers(data.users || [])
+          setCustomers(data.users || [])
         }
       } catch (err) {
         if (!cancelled) {
           setLoadError(
             err.response?.data?.error ||
-              'Could not load suppliers.'
+              'Could not load customers.'
           )
         }
       }
     }
 
-    loadSuppliers()
+    loadCustomers()
 
     return () => {
       cancelled = true
     }
   }, [])
 
-  const handleDelete = async (supplier) => {
+  const handleDelete = async (customer) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${supplier.name}"?`
+      `Are you sure you want to delete "${customer.name}"?`
     )
 
     if (!confirmed) {
@@ -49,21 +49,21 @@ const ManageSuppliers = () => {
     }
 
     setRowError('')
-    setDeletingId(supplier._id)
+    setDeletingId(customer._id)
 
     try {
-      await api.delete(`/users/${supplier._id}`)
+      await api.delete(`/users/${customer._id}`)
 
-      setSuppliers((prev) =>
+      setCustomers((prev) =>
         prev.filter(
-          (supplierItem) =>
-            supplierItem._id !== supplier._id
+          (customerItem) =>
+            customerItem._id !== customer._id
         )
       )
     } catch (err) {
       setRowError(
         err.response?.data?.error ||
-          'Could not delete this supplier.'
+          'Could not delete this customer.'
       )
     } finally {
       setDeletingId(null)
@@ -71,14 +71,14 @@ const ManageSuppliers = () => {
   }
 
   const loading =
-    suppliers === null && !loadError
+    customers === null && !loadError
 
   return (
     <div>
       <div className="admin-page-header">
         <div>
-          <h1>Manage Suppliers</h1>
-          <p>View and manage registered suppliers.</p>
+          <h1>Customers</h1>
+          <p>View and manage registered customers.</p>
         </div>
       </div>
 
@@ -101,20 +101,20 @@ const ManageSuppliers = () => {
       )}
 
       {loading && (
-        <p>Loading suppliers…</p>
+        <p>Loading customers…</p>
       )}
 
       {!loading &&
-        suppliers?.length === 0 && (
+        customers?.length === 0 && (
           <div className="empty-state card">
-            <h3>No suppliers yet</h3>
+            <h3>No customers yet</h3>
             <p>
-              No suppliers have registered yet.
+              No customers have registered yet.
             </p>
           </div>
         )}
 
-      {suppliers?.length > 0 && (
+      {customers?.length > 0 && (
         <div className="card admin-table-card">
           <table className="admin-table">
             <thead>
@@ -127,18 +127,18 @@ const ManageSuppliers = () => {
             </thead>
 
             <tbody>
-              {suppliers.map((supplier) => (
-                <tr key={supplier._id}>
+              {customers.map((customer) => (
+                <tr key={customer._id}>
                   <td data-label="ID">
-                    {supplier._id}
+                    {customer._id}
                   </td>
 
                   <td data-label="Name">
-                    {supplier.name}
+                    {customer.name}
                   </td>
 
                   <td data-label="Email">
-                    {supplier.email}
+                    {customer.email}
                   </td>
 
                   <td
@@ -149,13 +149,13 @@ const ManageSuppliers = () => {
                       type="button"
                       className="btn btn--danger-ghost btn--sm"
                       onClick={() =>
-                        handleDelete(supplier)
+                        handleDelete(customer)
                       }
                       disabled={
-                        deletingId === supplier._id
+                        deletingId === customer._id
                       }
                     >
-                      {deletingId === supplier._id
+                      {deletingId === customer._id
                         ? 'Deleting…'
                         : 'Delete'}
                     </button>
@@ -170,4 +170,4 @@ const ManageSuppliers = () => {
   )
 }
 
-export default ManageSuppliers
+export default ManageCustomers
