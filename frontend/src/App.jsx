@@ -3,54 +3,53 @@ import {
   Routes,
   Route,
   Navigate,
-} from 'react-router-dom';
+} from 'react-router-dom'
 
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext'
 
-import ProtectedRoute from './components/shared/ProtectedRoute';
+import ProtectedRoute from './components/shared/ProtectedRoute'
 
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import FAQ from './pages/FAQ';
+import Home from './pages/Home'
+import Login from './pages/Login'
+import Register from './pages/Register'
 
 
 /* =========================
    CUSTOMER
 ========================= */
 
-import CustomerLayout from './components/customer/CustomerLayout';
-import Dashboard from './pages/customer/Dashboard';
-import QuizList from './pages/customer/QuizList';
-import QuizAttempt from './pages/customer/QuizAttempt';
-import Results from './pages/customer/Results';
-import Certificate from './pages/customer/Certificate';
-import History from './pages/customer/History';
-import Profile from './pages/customer/Profile';
+import CustomerLayout from './components/customer/CustomerLayout'
+import Dashboard from './pages/customer/Dashboard'
+import QuizList from './pages/customer/QuizList'
+import QuizDifficulty from './pages/customer/QuizDifficulty'
+import QuizAttempt from './pages/customer/QuizAttempt'
+import Results from './pages/customer/Results'
+import Certificate from './pages/customer/Certificate'
+import History from './pages/customer/History'
+import Profile from './pages/customer/Profile'
 
 
 /* =========================
    ADMIN
 ========================= */
 
-import AdminLayout from './components/admin/AdminLayout';
-import AdminDashboard from './pages/admin/DashboardOverview';
-import ManageCategories from './pages/admin/ManageCategories';
-import ManageQuestions from './pages/admin/ManageQuestions';
-import ManageSuppliers from './pages/admin/ManageSuppliers';
-import AllResults from './pages/admin/AllResults';
-import ManageFAQs from './pages/admin/ManageFAQs';
+import AdminLayout from './components/admin/AdminLayout'
+import AdminDashboard from './pages/admin/DashboardOverview'
+import ManageCategories from './pages/admin/ManageCategories'
+import ManageQuestions from './pages/admin/ManageQuestions'
+import ManageSuppliers from './pages/admin/ManageSuppliers'
+import AllResults from './pages/admin/AllResults'
 
 
 /* =========================
    SUPPLIER
 ========================= */
 
-import SupplierLayout from './components/supplier/SupplierLayout';
-import SupplierDashboardOverview from './pages/supplier/DashboardOverview';
-import MyQuestions from './pages/supplier/MyQuestions';
-import AddQuestion from './pages/supplier/AddQuestion';
-import SupplierProfile from './pages/supplier/Profile';
+import SupplierLayout from './components/supplier/SupplierLayout'
+import SupplierDashboardOverview from './pages/supplier/DashboardOverview'
+import MyQuestions from './pages/supplier/MyQuestions'
+import AddQuestion from './pages/supplier/AddQuestion'
+import SupplierProfile from './pages/supplier/Profile'
 
 
 function App() {
@@ -76,11 +75,6 @@ function App() {
           <Route
             path="/register"
             element={<Register />}
-          />
-
-          <Route
-            path="/faq"
-            element={<FAQ />}
           />
 
 
@@ -131,11 +125,6 @@ function App() {
               <Route
                 path="results"
                 element={<AllResults />}
-              />
-
-              <Route
-                path="faqs"
-                element={<ManageFAQs />}
               />
 
             </Route>
@@ -226,6 +215,15 @@ function App() {
                 element={<QuizList />}
               />
 
+              {/* IMPORTANT:
+                  Category → Difficulty selection
+              */}
+              <Route
+                path="quiz-difficulty/:categoryId"
+                element={<QuizDifficulty />}
+              />
+
+              {/* Actual quiz */}
               <Route
                 path="quiz/:categoryId/:difficulty"
                 element={<QuizAttempt />}
@@ -257,7 +255,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
-  );
+  )
 }
 
-export default App;
+export default App

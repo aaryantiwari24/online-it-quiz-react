@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Link,
   useLocation,
@@ -28,9 +28,6 @@ const Login = () => {
   const {
     login,
     logout,
-    isAuthenticated,
-    user,
-    loading,
   } = useAuth()
 
   const navigate = useNavigate()
@@ -52,48 +49,34 @@ const Login = () => {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
-    if (!loading && isAuthenticated) {
-      const from = location.state?.from?.pathname
-
-      navigate(
-        from ||
-          ROLE_HOME[user?.role] ||
-          '/',
-        { replace: true }
-      )
-    }
-  }, [
-    loading,
-    isAuthenticated,
-    user,
-    location,
-    navigate,
-  ])
-
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     setError('')
+
+    if (!email.trim() || !password) {
+      setError('Email and password are required.')
+      return
+    }
+
     setSubmitting(true)
 
     try {
       const loggedInUser = await login(
-        email,
+        email.trim(),
         password
       )
 
       /*
-       * Make sure the account belongs to
-       * the role selected on the Home page.
+       * Make sure the account matches
+       * the selected login type.
        */
       if (loggedInUser.role !== role) {
         logout()
 
         setError(
           `This account is not a ${
-            ROLE_LABELS[role]
-              .replace(' Login', '')
+            ROLE_LABELS[role].replace(' Login', '')
           } account.`
         )
 
@@ -101,14 +84,25 @@ const Login = () => {
         return
       }
 
+      /*
+       * ONLY successful login reaches here.
+       */
       navigate(
         ROLE_HOME[loggedInUser.role],
         { replace: true }
       )
+
     } catch (err) {
+      /*
+       * FAILED LOGIN:
+       *
+       * Stay on this page.
+       * Do NOT navigate.
+       */
       setError(
         err.response?.data?.error ||
-          'Invalid email or password.'
+        err.response?.data?.message ||
+        'Invalid email or password.'
       )
 
       setSubmitting(false)
@@ -117,6 +111,7 @@ const Login = () => {
 
   return (
     <div className="auth-page">
+
       <Link
         to="/"
         className="auth-brand"
@@ -125,6 +120,7 @@ const Login = () => {
       </Link>
 
       <div className="auth-card">
+
         <h1>
           {ROLE_LABELS[role]}
         </h1>
@@ -142,6 +138,7 @@ const Login = () => {
           onSubmit={handleSubmit}
           noValidate
         >
+
           <div className="auth-field">
             <label htmlFor="login-email">
               Email Address
@@ -185,23 +182,21 @@ const Login = () => {
               ? 'Logging In…'
               : 'Log In'}
           </button>
+
         </form>
 
-        {/* Customer and Supplier can register.
-            Admin cannot register publicly. */}
         {role !== 'admin' && (
           <p className="auth-switch">
             Don't have an account?{' '}
 
             <Link
-              to={
-                ROLE_REGISTER[role]
-              }
+              to={ROLE_REGISTER[role]}
             >
               Register here
             </Link>
           </p>
         )}
+
       </div>
     </div>
   )

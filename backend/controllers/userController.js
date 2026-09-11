@@ -211,6 +211,9 @@ const updateSupplierProfile = async (
   try {
     const { name, email, password } = req.body;
 
+    /*
+     * Same required-field behavior as PHP profile.php
+     */
     if (!name || !email) {
       const err = new Error(
         'Name and Email are required fields.'
@@ -246,6 +249,9 @@ const updateSupplierProfile = async (
 
     assertDbReady();
 
+    /*
+     * Get the currently logged-in supplier.
+     */
     const supplier = await User.findById(
       req.user._id
     );
@@ -259,6 +265,9 @@ const updateSupplierProfile = async (
       return next(err);
     }
 
+    /*
+     * Only supplier accounts may use this endpoint.
+     */
     if (supplier.role !== 'supplier') {
       const err = new Error(
         'Only supplier accounts can update this profile'
@@ -268,6 +277,9 @@ const updateSupplierProfile = async (
       return next(err);
     }
 
+    /*
+     * Prevent another account from using the same email.
+     */
     const existingUser = await User.findOne({
       email: normalizedEmail,
       _id: { $ne: supplier._id },
@@ -282,12 +294,15 @@ const updateSupplierProfile = async (
       return next(err);
     }
 
+    /*
+     * Update name and email.
+     */
     supplier.name = trimmedName;
     supplier.email = normalizedEmail;
 
     /*
-     * PHP behavior:
-     * If password is blank, keep the existing password.
+     * If password is blank, keep the old password.
+     * If a new password is supplied, hash it.
      */
     if (
       typeof password === 'string' &&
@@ -301,6 +316,9 @@ const updateSupplierProfile = async (
 
     await supplier.save();
 
+    /*
+     * Never send the password back to React.
+     */
     const safeUser = await User.findById(
       supplier._id
     ).select('-password');
@@ -321,6 +339,10 @@ const updateSupplierProfile = async (
   }
 };
 
+
+/* =========================================================
+   EXPORTS
+========================================================= */
 
 module.exports = {
   createSupplier,

@@ -12,6 +12,11 @@ const AuthContext = createContext(null);
 const STORAGE_TOKEN_KEY = 'token';
 const STORAGE_USER_KEY = 'user';
 
+
+/* =========================================================
+   READ STORED USER
+========================================================= */
+
 const readStoredUser = () => {
   try {
     const raw = localStorage.getItem(
@@ -23,6 +28,11 @@ const readStoredUser = () => {
     return null;
   }
 };
+
+
+/* =========================================================
+   SAVE SESSION
+========================================================= */
 
 const persistSession = (token, user) => {
   localStorage.setItem(
@@ -36,6 +46,11 @@ const persistSession = (token, user) => {
   );
 };
 
+
+/* =========================================================
+   CLEAR SESSION
+========================================================= */
+
 const clearSession = () => {
   localStorage.removeItem(
     STORAGE_TOKEN_KEY
@@ -45,6 +60,11 @@ const clearSession = () => {
     STORAGE_USER_KEY
   );
 };
+
+
+/* =========================================================
+   AUTH PROVIDER
+========================================================= */
 
 const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() =>
@@ -58,6 +78,11 @@ const AuthProvider = ({ children }) => {
   );
 
   const [loading, setLoading] = useState(true);
+
+
+  /* =======================================================
+     VERIFY STORED TOKEN
+  ======================================================= */
 
   useEffect(() => {
     let cancelled = false;
@@ -102,10 +127,15 @@ const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  /*
-   * LOGIN
-   */
-  const login = async (email, password) => {
+
+  /* =======================================================
+     LOGIN
+  ======================================================= */
+
+  const login = async (
+    email,
+    password
+  ) => {
     const { data } = await api.post(
       '/auth/login',
       {
@@ -126,11 +156,14 @@ const AuthProvider = ({ children }) => {
   };
 
 
+  /* =======================================================
+     REGISTER
+  ======================================================= */
+
   /*
-   * REGISTER
-   *
    * Registration does NOT automatically login.
    */
+
   const register = async (
     name,
     email,
@@ -151,13 +184,18 @@ const AuthProvider = ({ children }) => {
   };
 
 
+  /* =======================================================
+     UPDATE CURRENT USER
+  ======================================================= */
+
   /*
-   * UPDATE CURRENT USER
-   *
-   * Used by Supplier Profile Settings after
-   * successfully updating the account.
+   * Used after Supplier Profile Settings
+   * successfully updates the account.
    */
-  const updateCurrentUser = (updatedUser) => {
+
+  const updateCurrentUser = (
+    updatedUser
+  ) => {
     setUser(updatedUser);
 
     localStorage.setItem(
@@ -167,16 +205,22 @@ const AuthProvider = ({ children }) => {
   };
 
 
-  /*
-   * LOGOUT
-   */
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
+
   const logout = () => {
-    clearSession();
+  clearSession();
 
-    setToken(null);
-    setUser(null);
-  };
+  setToken(null);
+  setUser(null);
 
+  window.location.href = '/';
+};
+
+  /* =======================================================
+     CONTEXT VALUE
+  ======================================================= */
 
   const value = {
     user,
@@ -193,6 +237,7 @@ const AuthProvider = ({ children }) => {
     logout,
   };
 
+
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -200,6 +245,10 @@ const AuthProvider = ({ children }) => {
   );
 };
 
+
+/* =========================================================
+   USE AUTH
+========================================================= */
 
 const useAuth = () => {
   const ctx = useContext(AuthContext);

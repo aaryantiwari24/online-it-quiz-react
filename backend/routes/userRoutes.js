@@ -16,12 +16,22 @@ const router = express.Router();
 
 
 /*
- * Supplier profile
+ * =========================================================
+ * SUPPLIER PROFILE
+ * =========================================================
  *
  * IMPORTANT:
- * This must come before /:id so "profile" is not treated
- * as a MongoDB user ID.
+ * This route must come BEFORE /:id.
+ *
+ * Otherwise Express could interpret:
+ *
+ * /profile
+ *
+ * as:
+ *
+ * /:id
  */
+
 router.put(
   '/profile',
   protect,
@@ -31,8 +41,11 @@ router.put(
 
 
 /*
- * Admin supplier management
+ * =========================================================
+ * ADMIN - SUPPLIER MANAGEMENT
+ * =========================================================
  */
+
 router.post(
   '/',
   protect,

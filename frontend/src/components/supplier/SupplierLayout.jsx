@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import '../../pages/supplier/Supplier.css';
 
 const NAV_ITEMS = [
-  { to: '/supplier/dashboard', label: 'Home', end: true },
+{ to: '/', label: 'Home', end: true },
   { to: '/supplier/dashboard', label: 'Dashboard', end: true },
   { to: '/supplier/questions', label: 'Manage Questions' },
   { to: '/supplier/profile', label: 'Profile Settings' },
@@ -69,7 +69,7 @@ const SupplierLayout = () => {
         >
           {NAV_ITEMS.map((item) => (
             <NavLink
-              key={item.to + item.label}
+              key={item.to}
               to={item.to}
               end={item.end}
               onClick={closeDrawer}

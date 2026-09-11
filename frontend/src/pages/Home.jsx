@@ -14,22 +14,26 @@ const HOW_IT_WORKS_STEPS = [
   {
     n: '01',
     title: 'Choose Topic',
-    copy: "Pick a category and a difficulty tier that matches where you're at.",
+    copy:
+      'Select a specific IT category and difficulty tier that matches your current skill level.',
   },
   {
     n: '02',
     title: 'Answer',
-    copy: 'Work through 10 questions against the clock.',
+    copy:
+      'Complete a dynamically generated 10-question evaluation under a strict time limit.',
   },
   {
     n: '03',
     title: 'Score',
-    copy: 'Get graded instantly the moment you submit.',
+    copy:
+      'Get instant grading, detailed feedback, and review correct answers immediately.',
   },
   {
     n: '04',
     title: 'Certify',
-    copy: 'Score 60% or higher and a verifiable credential is generated automatically.',
+    copy:
+      'Pass the 60% threshold to automatically generate a verifiable digital credential.',
   },
 ]
 
@@ -38,19 +42,79 @@ const DIFFICULTY_TIERS = [
     tone: 'easy',
     pill: 'Easy',
     label: 'Foundations',
-    copy: 'Core definitions and basic syntax.',
+    copy:
+      'Start building confidence. Focuses on core definitions, basic syntax, and introductory concepts.',
   },
   {
     tone: 'medium',
     pill: 'Medium',
     label: 'Application',
-    copy: 'Contextual knowledge and everyday debugging.',
+    copy:
+      'Push your understanding. Requires contextual knowledge, debugging, and mid-level logic.',
   },
   {
     tone: 'hard',
     pill: 'Hard',
     label: 'Expertise',
-    copy: 'Edge cases and advanced logic.',
+    copy:
+      'Prove your expertise. Features complex edge cases, advanced algorithms, and system analysis.',
+  },
+]
+
+/*
+ * FAQ is intentionally static.
+ * It is NOT connected to MongoDB or any backend API.
+ */
+const FAQS = [
+  {
+    question: 'How many questions are in each quiz?',
+    answer:
+      'Each quiz contains 10 questions selected from the category and difficulty level you choose.',
+  },
+  {
+    question: 'How much time do I get to complete a quiz?',
+    answer:
+      'You have 10 minutes to complete a quiz.',
+  },
+  {
+    question: 'What difficulty levels are available?',
+    answer:
+      'There are three difficulty levels: Easy, Medium, and Hard.',
+  },
+  {
+    question: 'What score do I need to pass?',
+    answer:
+      'You need a score of 60% or higher to pass the evaluation and earn a certificate.',
+  },
+  {
+    question: 'Are quiz questions selected randomly?',
+    answer:
+      'Yes. Questions are dynamically selected from the available question bank for the category and difficulty you choose.',
+  },
+  {
+    question: 'Can I see my results after completing a quiz?',
+    answer:
+      'Yes. Your score, percentage, status, and attempt information are available from your customer dashboard.',
+  },
+  {
+    question: 'Do I receive a certificate after passing?',
+    answer:
+      'Yes. Passing an evaluation with at least 60% automatically generates a certificate of completion.',
+  },
+  {
+    question: 'Can suppliers add questions?',
+    answer:
+      'Yes. Suppliers can add, update, and delete questions through the supplier portal.',
+  },
+  {
+    question: 'Do I need an account to take a quiz?',
+    answer:
+      'Yes. You need to register and log in as a customer before attempting a quiz.',
+  },
+  {
+    question: 'Can I update my profile information?',
+    answer:
+      'Yes. You can update your profile information from your account settings.',
   },
 ]
 
@@ -59,10 +123,12 @@ export function Navbar() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const closeMenu = () => setMenuOpen(false)
+  const closeMenu = () => {
+    setMenuOpen(false)
+  }
 
   const primaryCtaTarget = isAuthenticated
-    ? ROLE_HOME[user.role] ?? '/'
+    ? ROLE_HOME[user?.role] ?? '/'
     : '/register'
 
   const primaryCtaLabel = isAuthenticated
@@ -78,7 +144,16 @@ export function Navbar() {
   return (
     <header className="home-navbar">
       <div className="home-navbar-inner">
-        <Link to="/" className="home-navbar-brand">
+
+        <Link
+          to="/"
+          className="home-navbar-brand"
+          onClick={closeMenu}
+        >
+          <span className="home-navbar-brand-icon">
+            ✓
+          </span>
+
           IT Quiz
         </Link>
 
@@ -88,38 +163,56 @@ export function Navbar() {
           }`}
           aria-label="Primary"
         >
-          <a href="#categories" onClick={closeMenu}>
+          <a
+            href="#categories"
+            onClick={closeMenu}
+          >
             Explore
           </a>
 
-          <a href="#how-it-works" onClick={closeMenu}>
+          <a
+            href="#how-it-works"
+            onClick={closeMenu}
+          >
             How it Works
           </a>
 
-          <Link to="/faq" onClick={closeMenu}>
+          <a
+            href="#faq"
+            onClick={closeMenu}
+          >
             FAQ
-          </Link>
+          </a>
 
-          {/* Supplier Login */}
-          <Link
-            to="/login?role=supplier"
-            onClick={closeMenu}
-          >
-            Supplier
-          </Link>
+          {!isAuthenticated && (
+            <>
+              <Link
+                to="/login?role=supplier"
+                onClick={closeMenu}
+              >
+                Supplier
+              </Link>
 
-          {/* Admin Login */}
-          <Link
-            to="/login?role=admin"
-            onClick={closeMenu}
-          >
-            Admin
-          </Link>
+              <Link
+                to="/login?role=admin"
+                onClick={closeMenu}
+              >
+                Admin
+              </Link>
 
-          {isAuthenticated ? (
+              <Link
+                to="/login?role=customer"
+                onClick={closeMenu}
+              >
+                Log in
+              </Link>
+            </>
+          )}
+
+          {isAuthenticated && (
             <span className="home-nav-account">
               <span className="home-nav-hello">
-                Hi, {user.name.split(' ')[0]}
+                Hi, {user?.name?.split(' ')[0] || 'User'}
               </span>
 
               <button
@@ -130,13 +223,6 @@ export function Navbar() {
                 Log Out
               </button>
             </span>
-          ) : (
-            <Link
-              to="/login?role=customer"
-              onClick={closeMenu}
-            >
-              Log in
-            </Link>
           )}
         </nav>
 
@@ -144,6 +230,7 @@ export function Navbar() {
           <Link
             to={primaryCtaTarget}
             className="btn btn--primary btn--sm"
+            onClick={closeMenu}
           >
             {primaryCtaLabel}
           </Link>
@@ -158,6 +245,7 @@ export function Navbar() {
             {menuOpen ? '✕' : '☰'}
           </button>
         </div>
+
       </div>
     </header>
   )
@@ -167,18 +255,26 @@ function Hero() {
   const { isAuthenticated, user } = useAuth()
 
   const primaryCtaTarget = isAuthenticated
-    ? ROLE_HOME[user.role] ?? '/'
+    ? ROLE_HOME[user?.role] ?? '/'
     : '/register'
 
   const primaryCtaLabel = isAuthenticated
-    ? 'Go to Dashboard'
+    ? 'Explore Categories'
     : 'Register to Start'
 
   return (
     <section className="home-hero">
+
       <div className="home-hero-copy">
+
+        <p className="home-hero-eyebrow">
+          Online IT Quiz Platform
+        </p>
+
         <h1 className="home-hero-heading">
-          Test Your IT Knowledge.
+          Test Your IT
+          <br />
+          Knowledge.
           <br />
           <span className="home-hero-heading-accent">
             Prove Your Skills.
@@ -186,12 +282,13 @@ function Hero() {
         </h1>
 
         <p className="home-hero-subtext">
-          A focused certification environment — pick a topic,
-          answer real questions against the clock, and walk away
-          with a credential that proves what you know.
+          Join our premium certification environment. Take dynamically
+          generated evaluations, track your performance, and earn verified
+          credentials.
         </p>
 
         <div className="home-hero-ctas">
+
           <Link
             to={primaryCtaTarget}
             className="btn btn--primary"
@@ -205,56 +302,94 @@ function Hero() {
           >
             Explore Quizzes
           </a>
+
         </div>
+
       </div>
 
       <div
         className="home-hero-visual"
         aria-hidden="true"
       >
+
+        <svg
+          className="home-hero-path"
+          viewBox="0 0 520 360"
+          fill="none"
+        >
+          <path
+            d="M35 310 C110 270 75 180 165 160 C250 140 260 245 350 205 C425 172 420 70 500 45"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeDasharray="8 8"
+          />
+
+          <circle
+            className="home-hero-moving-dot"
+            cx="35"
+            cy="310"
+            r="6"
+          />
+        </svg>
+
+        <div className="home-hero-floating-timer">
+          <span className="home-hero-floating-label">
+            Time Remaining
+          </span>
+
+          <strong>
+            12:45
+          </strong>
+        </div>
+
         <div className="home-hero-quiz-card">
+
           <div className="home-hero-quiz-card-top">
+
             <span className="home-hero-quiz-card-label">
-              Certification Evaluation
+              JAVASCRIPT
             </span>
 
-            <span className="home-hero-quiz-card-timer">
-              11:42
+            <span className="home-hero-quiz-card-progress-text">
+              07 / 20
             </span>
-          </div>
 
-          <div className="home-hero-quiz-card-progress">
-            <div className="home-hero-quiz-card-progress-fill" />
           </div>
 
           <p className="home-hero-quiz-card-question">
-            Which array method builds a new array by transforming
-            every element?
+            What does a JavaScript function return by default?
           </p>
 
           <div className="home-hero-quiz-card-options">
+
+            <div className="home-hero-quiz-card-option">
+              A specific Value
+            </div>
+
             <div className="home-hero-quiz-card-option home-hero-quiz-card-option--selected">
-              map()
+              Undefined
             </div>
 
             <div className="home-hero-quiz-card-option">
-              filter()
+              An Object
             </div>
 
-            <div className="home-hero-quiz-card-option">
-              forEach()
-            </div>
-
-            <div className="home-hero-quiz-card-option">
-              reduce()
-            </div>
           </div>
+
         </div>
 
-        <div className="home-hero-toast-card">
-          🎉 Score: 92% — Certificate Earned
+        <div className="home-hero-score-card">
+          <strong>
+            Score: 92%
+          </strong>
+
+          <span>
+            Certificate Earned
+          </span>
         </div>
+
       </div>
+
     </section>
   )
 }
@@ -268,12 +403,12 @@ function CategoriesSection() {
   useEffect(() => {
     let cancelled = false
 
-    const load = async () => {
+    const loadCategories = async () => {
       try {
         const { data } = await api.get('/categories')
 
         if (!cancelled) {
-          setCategories(data.categories)
+          setCategories(data.categories || [])
         }
       } catch (err) {
         if (!cancelled) {
@@ -285,7 +420,7 @@ function CategoriesSection() {
       }
     }
 
-    load()
+    loadCategories()
 
     return () => {
       cancelled = true
@@ -297,19 +432,26 @@ function CategoriesSection() {
   const startQuizTarget =
     isAuthenticated && user?.role === 'customer'
       ? '/customer/quizzes'
-      : '/register'
+      : '/login?role=customer'
 
   return (
     <section
       id="categories"
-      className="home-section"
+      className="home-section home-categories-section"
     >
+
       <div className="home-section-header">
-        <h2>Explore IT Categories</h2>
+
+        <h2>
+          Explore IT Categories
+        </h2>
 
         <p>
-          Real questions, pulled from our growing question bank.
+          Choose from our curated library of technical domains. Each
+          category features dynamically generated questions submitted
+          by industry professionals.
         </p>
+
       </div>
 
       {error && (
@@ -321,31 +463,47 @@ function CategoriesSection() {
         </p>
       )}
 
-      {loading && <p>Loading categories…</p>}
+      {loading && (
+        <p className="home-loading">
+          Loading categories…
+        </p>
+      )}
 
       {!loading && categories?.length === 0 && (
         <div className="empty-state card">
-          <h3>No categories yet</h3>
-          <p>Check back soon.</p>
+          <h3>
+            No categories yet
+          </h3>
+
+          <p>
+            Check back soon.
+          </p>
         </div>
       )}
 
       {categories?.length > 0 && (
         <div className="home-grid home-grid--categories">
+
           {categories.map((cat) => (
             <div
               key={cat._id}
               className="card home-category-card"
             >
+
               <div className="home-category-badge">
                 {cat.category_name
-                  .slice(0, 2)
+                  ?.slice(0, 2)
                   .toUpperCase()}
               </div>
 
-              <h3>{cat.category_name}</h3>
+              <h3>
+                {cat.category_name}
+              </h3>
 
-              <p>{cat.description}</p>
+              <p>
+                {cat.description ||
+                  'Explore questions and test your knowledge in this technical domain.'}
+              </p>
 
               <Link
                 to={startQuizTarget}
@@ -353,10 +511,13 @@ function CategoriesSection() {
               >
                 Start Quiz →
               </Link>
+
             </div>
           ))}
+
         </div>
       )}
+
     </section>
   )
 }
@@ -367,30 +528,45 @@ function HowItWorksSection() {
       id="how-it-works"
       className="home-section"
     >
+
       <div className="home-section-header">
-        <h2>How it Works</h2>
+
+        <h2>
+          The Learning Path
+        </h2>
 
         <p>
-          Four steps from picking a topic to holding a credential.
+          A simple, transparent process to validate your skills and build
+          your professional profile.
         </p>
+
       </div>
 
       <div className="home-grid home-grid--steps">
+
         {HOW_IT_WORKS_STEPS.map((step) => (
           <div
             key={step.n}
             className="card home-step-card"
           >
+
             <span className="home-step-number">
               {step.n}
             </span>
 
-            <h3>{step.title}</h3>
+            <h3>
+              {step.title}
+            </h3>
 
-            <p>{step.copy}</p>
+            <p>
+              {step.copy}
+            </p>
+
           </div>
         ))}
+
       </div>
+
     </section>
   )
 }
@@ -398,33 +574,47 @@ function HowItWorksSection() {
 function DifficultySection() {
   return (
     <section className="home-section">
+
       <div className="home-section-header">
-        <h2>Structured Difficulty</h2>
+
+        <h2>
+          Structured Difficulty
+        </h2>
 
         <p>
-          Every question bank spans three tiers, from first
-          principles to edge cases.
+          Evaluations are categorized into three distinct tiers, allowing
+          you to build confidence or prove mastery.
         </p>
+
       </div>
 
       <div className="home-grid home-grid--tiers">
+
         {DIFFICULTY_TIERS.map((tier) => (
           <div
             key={tier.tone}
             className="card home-tier-card"
           >
+
             <span
               className={`home-tier-badge home-tier-badge--${tier.tone}`}
             >
               {tier.pill}
             </span>
 
-            <h3>{tier.label}</h3>
+            <h3>
+              {tier.label}
+            </h3>
 
-            <p>{tier.copy}</p>
+            <p>
+              {tier.copy}
+            </p>
+
           </div>
         ))}
+
       </div>
+
     </section>
   )
 }
@@ -436,7 +626,7 @@ function StatsSection() {
   useEffect(() => {
     let cancelled = false
 
-    const load = async () => {
+    const loadStats = async () => {
       try {
         const { data } = await api.get('/stats')
 
@@ -453,7 +643,7 @@ function StatsSection() {
       }
     }
 
-    load()
+    loadStats()
 
     return () => {
       cancelled = true
@@ -466,25 +656,26 @@ function StatsSection() {
     ? [
         {
           label: 'Live Questions',
-          value: stats.liveQuestions,
+          value: stats.liveQuestions ?? 0,
         },
         {
           label: 'Quizzes Taken',
-          value: stats.quizzesTaken,
+          value: stats.quizzesTaken ?? 0,
         },
         {
           label: 'Difficulty Tiers',
-          value: stats.difficultyTiers,
+          value: stats.difficultyTiers ?? 3,
         },
         {
           label: 'Certificates Earned',
-          value: stats.certificatesEarned,
+          value: stats.certificatesEarned ?? 0,
         },
       ]
     : []
 
   return (
-    <section className="home-section">
+    <section className="home-stats-section">
+
       {error && (
         <p
           className="home-inline-error"
@@ -495,25 +686,108 @@ function StatsSection() {
       )}
 
       {loading ? (
-        <p>Loading stats…</p>
+        <p className="home-loading">
+          Loading stats…
+        </p>
       ) : (
-        <div className="home-grid home-grid--stats">
+        <div className="home-stats-strip">
+
           {items.map((item) => (
             <div
               key={item.label}
-              className="card home-stat-card"
+              className="home-stat-item"
             >
-              <p className="home-stat-label">
-                {item.label}
-              </p>
 
               <p className="home-stat-value">
                 {item.value}
               </p>
+
+              <p className="home-stat-label">
+                {item.label}
+              </p>
+
             </div>
           ))}
+
         </div>
       )}
+
+    </section>
+  )
+}
+
+function FAQSection() {
+  const [openIndex, setOpenIndex] = useState(null)
+
+  const toggleFAQ = (index) => {
+    setOpenIndex((current) =>
+      current === index ? null : index
+    )
+  }
+
+  return (
+    <section
+      id="faq"
+      className="home-section home-faq-section"
+    >
+
+      <div className="home-section-header">
+
+        <h2>
+          Frequently Asked Questions
+        </h2>
+
+        <p>
+          Find answers to common questions about quizzes, accounts,
+          certificates, and the IT Quiz platform.
+        </p>
+
+      </div>
+
+      <div className="home-faq-list">
+
+        {FAQS.map((faq, index) => {
+          const isOpen = openIndex === index
+
+          return (
+            <div
+              key={faq.question}
+              className={`home-faq-item ${
+                isOpen ? 'home-faq-item--open' : ''
+              }`}
+            >
+
+              <button
+                type="button"
+                className="home-faq-question"
+                onClick={() => toggleFAQ(index)}
+                aria-expanded={isOpen}
+              >
+
+                <span>
+                  {faq.question}
+                </span>
+
+                <span className="home-faq-icon">
+                  {isOpen ? '−' : '+'}
+                </span>
+
+              </button>
+
+              {isOpen && (
+                <div className="home-faq-answer">
+                  <p>
+                    {faq.answer}
+                  </p>
+                </div>
+              )}
+
+            </div>
+          )
+        })}
+
+      </div>
+
     </section>
   )
 }
@@ -522,88 +796,92 @@ function CertificatePreviewSection() {
   const { isAuthenticated, user } = useAuth()
 
   const primaryCtaTarget = isAuthenticated
-    ? ROLE_HOME[user.role] ?? '/'
+    ? ROLE_HOME[user?.role] ?? '/'
     : '/register'
 
-  const primaryCtaLabel = isAuthenticated
-    ? 'Go to Dashboard'
-    : 'Register to Start'
-
   return (
-    <section className="home-section">
-      <div className="home-section-header">
-        <h2>Every Pass Earns a Certificate</h2>
+    <section className="home-section home-certificate-section">
 
-        <p>
-          Score 60% or higher and a verified credential is
-          generated automatically — yours to download and share.
-        </p>
-      </div>
+      <div className="home-certificate-content">
 
-      <div
-        className="card home-cert-preview"
-        aria-hidden="true"
-      >
-        <p className="home-cert-eyebrow">
-          Certificate of Completion
-        </p>
+        <div className="home-certificate-copy">
 
-        <h3 className="home-cert-title">
-          IT Quiz
-        </h3>
+          <h2>
+            Earn Verified Credentials
+          </h2>
 
-        <p className="home-cert-subtitle">
-          Verified Professional Credential
-        </p>
+          <p>
+            Every time you successfully pass an evaluation, the system
+            automatically generates a unique Certificate of Completion.
+            Keep a record of your progress, download your PDFs, and share
+            your validated skills with employers.
+          </p>
 
-        <p className="home-cert-label">
-          This certifies that
-        </p>
+          {!isAuthenticated && (
+            <Link
+              to={primaryCtaTarget}
+              className="btn btn--primary"
+            >
+              Start Earning Today
+            </Link>
+          )}
 
-        <p className="home-cert-recipient">
-          Alex Morgan
-        </p>
-
-        <div className="home-cert-divider" />
-
-        <p className="home-cert-body">
-          has successfully completed the official{' '}
-          <strong>Application</strong> certification
-          evaluation in <strong>PHP</strong>, achieving
-          a score of <strong>92%</strong>.
-        </p>
-
-        <div className="home-cert-meta-row">
-          <div>
-            <p className="home-cert-meta-label">
-              Certificate No.
-            </p>
-
-            <p className="home-cert-meta-value">
-              ITQ-2026-A1B2C3D4E5F6
-            </p>
-          </div>
-
-          <div>
-            <p className="home-cert-meta-label">
-              Issued
-            </p>
-
-            <p className="home-cert-meta-value">
-              1/15/2026
-            </p>
-          </div>
         </div>
+
+        <div
+          className="home-cert-preview"
+          aria-hidden="true"
+        >
+
+          <p className="home-cert-eyebrow">
+            Certificate of Completion
+          </p>
+
+          <h3 className="home-cert-title">
+            IT Quiz
+          </h3>
+
+          <p className="home-cert-subtitle">
+            Verified Professional Credential
+          </p>
+
+          <p className="home-cert-label">
+            This is proudly presented to
+          </p>
+
+          <p className="home-cert-recipient">
+            Student Name
+          </p>
+
+          <div className="home-cert-divider" />
+
+          <p className="home-cert-body">
+            for successfully passing the official certification
+            evaluation with a score of <strong>92%</strong>.
+          </p>
+
+          <div className="home-cert-meta-row">
+
+            <div>
+              <p className="home-cert-meta-label">
+                Issued
+              </p>
+
+              <p className="home-cert-meta-value">
+                Oct 24, 2024
+              </p>
+            </div>
+
+            <div className="home-cert-check">
+              ✓
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
 
-      <div className="home-cert-cta">
-        <Link
-          to={primaryCtaTarget}
-          className="btn btn--primary"
-        >
-          {primaryCtaLabel}
-        </Link>
-      </div>
     </section>
   )
 }
@@ -611,9 +889,19 @@ function CertificatePreviewSection() {
 export function Footer() {
   return (
     <footer className="home-footer">
-      <p>
-        © {new Date().getFullYear()} IT Quiz
-      </p>
+
+      <div className="home-footer-inner">
+
+        <p>
+          © {new Date().getFullYear()} IT Quiz
+        </p>
+
+        <a href="#faq">
+          Frequently Asked Questions
+        </a>
+
+      </div>
+
     </footer>
   )
 }
@@ -621,6 +909,7 @@ export function Footer() {
 const Home = () => {
   return (
     <div className="home-page">
+
       <Navbar />
 
       <main>
@@ -630,9 +919,11 @@ const Home = () => {
         <DifficultySection />
         <StatsSection />
         <CertificatePreviewSection />
+        <FAQSection />
       </main>
 
       <Footer />
+
     </div>
   )
 }
