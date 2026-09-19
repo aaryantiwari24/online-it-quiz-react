@@ -5,6 +5,7 @@ const {
   getUsers,
   deleteUser,
   updateSupplierProfile,
+  updateAdminProfile,
 } = require('../controllers/userController');
 
 const {
@@ -15,22 +16,9 @@ const {
 const router = express.Router();
 
 
-/*
- * =========================================================
- * SUPPLIER PROFILE
- * =========================================================
- *
- * IMPORTANT:
- * This route must come BEFORE /:id.
- *
- * Otherwise Express could interpret:
- *
- * /profile
- *
- * as:
- *
- * /:id
- */
+/* =========================================================
+   SUPPLIER PROFILE
+========================================================= */
 
 router.put(
   '/profile',
@@ -40,11 +28,21 @@ router.put(
 );
 
 
-/*
- * =========================================================
- * ADMIN - SUPPLIER MANAGEMENT
- * =========================================================
- */
+/* =========================================================
+   ADMIN PROFILE
+========================================================= */
+
+router.put(
+  '/admin-profile',
+  protect,
+  restrictTo('admin'),
+  updateAdminProfile
+);
+
+
+/* =========================================================
+   ADMIN - SUPPLIER MANAGEMENT
+========================================================= */
 
 router.post(
   '/',

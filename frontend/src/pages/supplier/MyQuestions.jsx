@@ -24,41 +24,6 @@ const EMPTY_FORM = {
  * /supplier/questions — every question this supplier created, across
  * every category, with client-side Category/Difficulty filters and
  * inline Edit/Delete.
- *
- * Per build-prompt Section 3, GET /api/questions/category/:id has no
- * "all my questions" variant and isn't creator-scoped server-side, so
- * this loads every category's full question list (admin's + every
- * supplier's) once via Promise.all, then filters to
- * q.createdBy?._id === user.id client-side — the same shape of fetch
- * Dashboard Overview needs too, just grouped/filtered differently here.
- *
- * Unlike admin's ManageQuestions.jsx, the Category/Difficulty filters
- * here don't refetch from the server on change — every category's data
- * is already in memory (it had to be, just to compute "mine" in the
- * first place), so filtering is a plain in-memory derive on every
- * render instead.
- *
- * No "Created By" column: every row here is already this supplier's own
- * by construction (see the filter above), so it'd be redundant — unlike
- * admin's version, which shows every supplier's questions and needs it.
- * No "+ Add Question" button either: creation lives on the separate
- * /supplier/add-question page (its own nav item), not inline here — only
- * Edit reuses ManageQuestions.jsx's inline toggle-form shape, and only
- * ever in edit mode.
- *
- * Because Edit/Delete only ever render on rows already filtered to this
- * supplier's own, neither button can trigger the backend's 403 ownership
- * check in normal use — but failures still surface the server's real
- * message verbatim rather than a generic one, in case a row goes stale
- * (e.g. deleted elsewhere) between load and click.
- *
- * Edit splices the PUT response directly into local state rather than
- * refetching everything — admin's ManageQuestions.jsx refetches after
- * edit specifically because its create/update responses don't come back
- * with a populated createdBy and its table needs to display that; this
- * page never displays createdBy at all, so that reason doesn't apply,
- * and a full refetch (every category, all over again) would be needless
- * work for a single-row change.
  */
 const MyQuestions = () => {
   const { user } = useAuth();
@@ -84,13 +49,16 @@ const MyQuestions = () => {
     const load = async () => {
       try {
         const { data: categoriesData } = await api.get('/categories');
+
         if (cancelled) return;
+
         const cats = categoriesData.categories;
         setCategories(cats);
 
         const perCategory = await Promise.all(
           cats.map(async (c) => {
             const { data } = await api.get(`/questions/category/${c._id}`);
+
             return data.questions.map((q) => ({
               ...q,
               categoryId: c._id,
@@ -98,18 +66,26 @@ const MyQuestions = () => {
             }));
           })
         );
+
         if (cancelled) return;
 
-        const mine = perCategory.flat().filter((q) => q.createdBy?._id === user.id);
+        const mine = perCategory
+          .flat()
+          .filter((q) => q.createdBy?._id === user.id);
+
         setMyQuestions(mine);
       } catch (err) {
         if (!cancelled) {
-          setLoadError(err.response?.data?.error || 'Could not load your questions.');
+          setLoadError(
+            err.response?.data?.error ||
+              'Could not load your questions.'
+          );
         }
       }
     };
 
     load();
+
     return () => {
       cancelled = true;
     };
@@ -117,6 +93,7 @@ const MyQuestions = () => {
 
   const openEditForm = (q) => {
     setEditingTarget(q);
+
     setForm({
       category: q.categoryId,
       question: q.question,
@@ -127,6 +104,7 @@ const MyQuestions = () => {
       correct_answer: q.correct_answer,
       difficulty: q.difficulty,
     });
+
     setFormError('');
   };
 
@@ -136,43 +114,78 @@ const MyQuestions = () => {
     setFormError('');
   };
 
-  const updateField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const updateField = (field) => (e) => {
+    setForm((f) => ({
+      ...f,
+      [field]: e.target.value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setFormError('');
     setSubmitting(true);
+
     try {
-      const { data } = await api.put(`/questions/${editingTarget._id}`, form);
+      const { data } = await api.put(
+        `/questions/${editingTarget._id}`,
+        form
+      );
+
       const updated = data.question;
+
       const categoryName =
-        categories.find((c) => c._id === updated.category)?.category_name ?? 'Unknown Category';
+        categories.find(
+          (c) => c._id === updated.category
+        )?.category_name ?? 'Unknown Category';
+
       setMyQuestions((prev) =>
         prev.map((q) =>
           q._id === updated._id
-            ? { ...updated, categoryId: updated.category, categoryName }
+            ? {
+                ...updated,
+                categoryId: updated.category,
+                categoryName,
+              }
             : q
         )
       );
+
       closeForm();
     } catch (err) {
-      setFormError(err.response?.data?.error || 'Something went wrong. Please try again.');
+      setFormError(
+        err.response?.data?.error ||
+          'Something went wrong. Please try again.'
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (q) => {
-    if (!window.confirm('Delete this question? This cannot be undone.')) {
+    if (
+      !window.confirm(
+        'Delete this question? This cannot be undone.'
+      )
+    ) {
       return;
     }
+
     setRowError('');
     setDeletingId(q._id);
+
     try {
       await api.delete(`/questions/${q._id}`);
-      setMyQuestions((prev) => prev.filter((item) => item._id !== q._id));
+
+      setMyQuestions((prev) =>
+        prev.filter((item) => item._id !== q._id)
+      );
     } catch (err) {
-      setRowError(err.response?.data?.error || 'Could not delete this question.');
+      setRowError(
+        err.response?.data?.error ||
+          'Could not delete this question.'
+      );
     } finally {
       setDeletingId(null);
     }
@@ -181,8 +194,20 @@ const MyQuestions = () => {
   const loading = myQuestions === null && !loadError;
 
   const filtered = (myQuestions ?? []).filter((q) => {
-    if (selectedCategoryId !== 'All' && q.categoryId !== selectedCategoryId) return false;
-    if (selectedDifficulty !== 'All' && q.difficulty !== selectedDifficulty) return false;
+    if (
+      selectedCategoryId !== 'All' &&
+      q.categoryId !== selectedCategoryId
+    ) {
+      return false;
+    }
+
+    if (
+      selectedDifficulty !== 'All' &&
+      q.difficulty !== selectedDifficulty
+    ) {
+      return false;
+    }
+
     return true;
   });
 
@@ -191,8 +216,17 @@ const MyQuestions = () => {
       <div className="supplier-page-header">
         <div>
           <h1>My Questions</h1>
-          <p>Every question you&apos;ve added, across every category.</p>
+          <p>
+            Every question you&apos;ve added, across every category.
+          </p>
         </div>
+
+        <Link
+          to="/supplier/add-question"
+          className="btn btn--primary"
+        >
+          Add Question
+        </Link>
       </div>
 
       {loadError && (
@@ -200,6 +234,7 @@ const MyQuestions = () => {
           {loadError}
         </p>
       )}
+
       {rowError && (
         <p className="supplier-inline-error" role="alert">
           {rowError}
@@ -211,13 +246,19 @@ const MyQuestions = () => {
       {categories?.length > 0 && (
         <div className="supplier-filter-bar">
           <div className="supplier-filter-field">
-            <label htmlFor="filter-category">Category</label>
+            <label htmlFor="filter-category">
+              Category
+            </label>
+
             <select
               id="filter-category"
               value={selectedCategoryId}
-              onChange={(e) => setSelectedCategoryId(e.target.value)}
+              onChange={(e) =>
+                setSelectedCategoryId(e.target.value)
+              }
             >
               <option value="All">All Categories</option>
+
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.category_name}
@@ -227,13 +268,19 @@ const MyQuestions = () => {
           </div>
 
           <div className="supplier-filter-field">
-            <label htmlFor="filter-difficulty">Difficulty</label>
+            <label htmlFor="filter-difficulty">
+              Difficulty
+            </label>
+
             <select
               id="filter-difficulty"
               value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              onChange={(e) =>
+                setSelectedDifficulty(e.target.value)
+              }
             >
               <option value="All">All</option>
+
               {DIFFICULTIES.map((d) => (
                 <option key={d} value={d}>
                   {d}
@@ -249,14 +296,20 @@ const MyQuestions = () => {
           <h2>Edit Question</h2>
 
           {formError && (
-            <p className="supplier-inline-error" role="alert">
+            <p
+              className="supplier-inline-error"
+              role="alert"
+            >
               {formError}
             </p>
           )}
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="supplier-field">
-              <label htmlFor="q-category">Category</label>
+              <label htmlFor="q-category">
+                Category
+              </label>
+
               <select
                 id="q-category"
                 value={form.category}
@@ -272,7 +325,10 @@ const MyQuestions = () => {
             </div>
 
             <div className="supplier-field">
-              <label htmlFor="q-text">Question</label>
+              <label htmlFor="q-text">
+                Question
+              </label>
+
               <textarea
                 id="q-text"
                 value={form.question}
@@ -283,7 +339,10 @@ const MyQuestions = () => {
 
             <div className="supplier-form-grid">
               <div className="supplier-field">
-                <label htmlFor="q-option-a">Option A</label>
+                <label htmlFor="q-option-a">
+                  Option A
+                </label>
+
                 <input
                   id="q-option-a"
                   type="text"
@@ -292,8 +351,12 @@ const MyQuestions = () => {
                   required
                 />
               </div>
+
               <div className="supplier-field">
-                <label htmlFor="q-option-b">Option B</label>
+                <label htmlFor="q-option-b">
+                  Option B
+                </label>
+
                 <input
                   id="q-option-b"
                   type="text"
@@ -302,8 +365,12 @@ const MyQuestions = () => {
                   required
                 />
               </div>
+
               <div className="supplier-field">
-                <label htmlFor="q-option-c">Option C</label>
+                <label htmlFor="q-option-c">
+                  Option C
+                </label>
+
                 <input
                   id="q-option-c"
                   type="text"
@@ -312,8 +379,12 @@ const MyQuestions = () => {
                   required
                 />
               </div>
+
               <div className="supplier-field">
-                <label htmlFor="q-option-d">Option D</label>
+                <label htmlFor="q-option-d">
+                  Option D
+                </label>
+
                 <input
                   id="q-option-d"
                   type="text"
@@ -326,8 +397,15 @@ const MyQuestions = () => {
 
             <div className="supplier-form-grid">
               <div className="supplier-field">
-                <label htmlFor="q-correct">Correct Answer</label>
-                <select id="q-correct" value={form.correct_answer} onChange={updateField('correct_answer')}>
+                <label htmlFor="q-correct">
+                  Correct Answer
+                </label>
+
+                <select
+                  id="q-correct"
+                  value={form.correct_answer}
+                  onChange={updateField('correct_answer')}
+                >
                   {ANSWER_KEYS.map((k) => (
                     <option key={k} value={k}>
                       {k}
@@ -335,9 +413,17 @@ const MyQuestions = () => {
                   ))}
                 </select>
               </div>
+
               <div className="supplier-field">
-                <label htmlFor="q-difficulty">Difficulty</label>
-                <select id="q-difficulty" value={form.difficulty} onChange={updateField('difficulty')}>
+                <label htmlFor="q-difficulty">
+                  Difficulty
+                </label>
+
+                <select
+                  id="q-difficulty"
+                  value={form.difficulty}
+                  onChange={updateField('difficulty')}
+                >
                   {DIFFICULTIES.map((d) => (
                     <option key={d} value={d}>
                       {d}
@@ -348,10 +434,20 @@ const MyQuestions = () => {
             </div>
 
             <div className="supplier-form-actions">
-              <button type="submit" className="btn btn--primary" disabled={submitting}>
+              <button
+                type="submit"
+                className="btn btn--primary"
+                disabled={submitting}
+              >
                 {submitting ? 'Saving…' : 'Save'}
               </button>
-              <button type="button" className="btn btn--ghost" onClick={closeForm} disabled={submitting}>
+
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={closeForm}
+                disabled={submitting}
+              >
                 Cancel
               </button>
             </div>
@@ -359,15 +455,23 @@ const MyQuestions = () => {
         </div>
       )}
 
-      {!loading && filtered.length === 0 && !loadError && (
-        <div className="empty-state card">
-          <h3>No questions yet</h3>
-          <p>Add your first one to see it here.</p>
-          <Link to="/supplier/add-question" className="btn btn--primary" style={{ marginTop: 16 }}>
-            Add Question
-          </Link>
-        </div>
-      )}
+      {!loading &&
+        filtered.length === 0 &&
+        !loadError && (
+          <div className="empty-state card">
+            <h3>No questions yet</h3>
+
+            <p>Add your first one to see it here.</p>
+
+            <Link
+              to="/supplier/add-question"
+              className="btn btn--primary"
+              style={{ marginTop: 16 }}
+            >
+              Add Question
+            </Link>
+          </div>
+        )}
 
       {filtered.length > 0 && (
         <div className="card supplier-table-card">
@@ -381,26 +485,52 @@ const MyQuestions = () => {
                 <th aria-label="Actions" />
               </tr>
             </thead>
+
             <tbody>
               {filtered.map((q) => (
                 <tr key={q._id}>
-                  <td data-label="Question">{q.question}</td>
-                  <td data-label="Category">{q.categoryName}</td>
-                  <td data-label="Difficulty">
-                    <StatusPill label={q.difficulty} tone={DIFFICULTY_TONE[q.difficulty]} />
+                  <td data-label="Question">
+                    {q.question}
                   </td>
-                  <td data-label="Correct Answer">{q.correct_answer}</td>
-                  <td data-label="Actions" className="supplier-table-actions">
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => openEditForm(q)}>
+
+                  <td data-label="Category">
+                    {q.categoryName}
+                  </td>
+
+                  <td data-label="Difficulty">
+                    <StatusPill
+                      label={q.difficulty}
+                      tone={
+                        DIFFICULTY_TONE[q.difficulty]
+                      }
+                    />
+                  </td>
+
+                  <td data-label="Correct Answer">
+                    {q.correct_answer}
+                  </td>
+
+                  <td
+                    data-label="Actions"
+                    className="supplier-table-actions"
+                  >
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      onClick={() => openEditForm(q)}
+                    >
                       Edit
                     </button>
+
                     <button
                       type="button"
                       className="btn btn--danger-ghost btn--sm"
                       onClick={() => handleDelete(q)}
                       disabled={deletingId === q._id}
                     >
-                      {deletingId === q._id ? 'Deleting…' : 'Delete'}
+                      {deletingId === q._id
+                        ? 'Deleting…'
+                        : 'Delete'}
                     </button>
                   </td>
                 </tr>

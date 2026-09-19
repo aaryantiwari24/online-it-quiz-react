@@ -14,6 +14,7 @@ import ManageCategories from './pages/admin/ManageCategories'
 import AllResults from './pages/admin/AllResults'
 import ManageCertificates from './pages/admin/ManageCertificates'
 import AdminProfile from './pages/admin/AdminProfile'
+import AdminCertificate from './pages/admin/AdminCertificate'
 
 // Supplier
 import SupplierLayout from './components/supplier/SupplierLayout'
@@ -41,7 +42,10 @@ function App() {
     <Routes>
       {/* ==================== PUBLIC ==================== */}
 
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={<Home />}
+      />
 
       <Route
         path="/login"
@@ -111,6 +115,14 @@ function App() {
             path="certificates"
             element={
               <ManageCertificates />
+            }
+          />
+
+          {/* View a specific certificate */}
+          <Route
+            path="certificates/:resultId"
+            element={
+              <AdminCertificate />
             }
           />
 

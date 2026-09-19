@@ -142,7 +142,7 @@ const getUsers = async (req, res, next) => {
 
 
 /* =========================================================
-   ADMIN - DELETE SUPPLIER
+   ADMIN - DELETE USER
 ========================================================= */
 
 const deleteUser = async (req, res, next) => {
@@ -211,14 +211,10 @@ const updateSupplierProfile = async (
   try {
     const { name, email, password } = req.body;
 
-    /*
-     * Same required-field behavior as PHP profile.php
-     */
     if (!name || !email) {
       const err = new Error(
         'Name and Email are required fields.'
       );
-
       err.status = 400;
       return next(err);
     }
@@ -242,16 +238,12 @@ const updateSupplierProfile = async (
       const err = new Error(
         'A valid email address is required'
       );
-
       err.status = 400;
       return next(err);
     }
 
     assertDbReady();
 
-    /*
-     * Get the currently logged-in supplier.
-     */
     const supplier = await User.findById(
       req.user._id
     );
@@ -265,9 +257,6 @@ const updateSupplierProfile = async (
       return next(err);
     }
 
-    /*
-     * Only supplier accounts may use this endpoint.
-     */
     if (supplier.role !== 'supplier') {
       const err = new Error(
         'Only supplier accounts can update this profile'
@@ -277,9 +266,6 @@ const updateSupplierProfile = async (
       return next(err);
     }
 
-    /*
-     * Prevent another account from using the same email.
-     */
     const existingUser = await User.findOne({
       email: normalizedEmail,
       _id: { $ne: supplier._id },
@@ -294,16 +280,9 @@ const updateSupplierProfile = async (
       return next(err);
     }
 
-    /*
-     * Update name and email.
-     */
     supplier.name = trimmedName;
     supplier.email = normalizedEmail;
 
-    /*
-     * If password is blank, keep the old password.
-     * If a new password is supplied, hash it.
-     */
     if (
       typeof password === 'string' &&
       password.length > 0
@@ -316,11 +295,107 @@ const updateSupplierProfile = async (
 
     await supplier.save();
 
-    /*
-     * Never send the password back to React.
-     */
     const safeUser = await User.findById(
       supplier._id
+    ).select('-password');
+
+    res.status(200).json({
+      message: 'Profile updated successfully!',
+      user: safeUser,
+    });
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      err.status = 400;
+    } else if (err.code === 11000) {
+      err.message = 'Email is already registered';
+      err.status = 400;
+    }
+
+    next(err);
+  }
+};
+
+
+/* =========================================================
+   ADMIN - UPDATE OWN PROFILE
+========================================================= */
+
+const updateAdminProfile = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+      const err = new Error(
+        'Admin Username and Email Address are required.'
+      );
+      err.status = 400;
+      return next(err);
+    }
+
+    const trimmedName = String(name).trim();
+
+    const normalizedEmail = String(email)
+      .trim()
+      .toLowerCase();
+
+    if (!trimmedName) {
+      const err = new Error(
+        'Admin Username and Email Address are required.'
+      );
+      err.status = 400;
+      return next(err);
+    }
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      const err = new Error(
+        'A valid email address is required'
+      );
+      err.status = 400;
+      return next(err);
+    }
+
+    assertDbReady();
+
+    const admin = await User.findById(req.user._id);
+
+    if (!admin) {
+      const err = new Error('Admin account not found');
+      err.status = 404;
+      return next(err);
+    }
+
+    if (admin.role !== 'admin') {
+      const err = new Error(
+        'Only admin accounts can update this profile'
+      );
+      err.status = 403;
+      return next(err);
+    }
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+      _id: { $ne: admin._id },
+    });
+
+    if (existingUser) {
+      const err = new Error(
+        'Email is already registered'
+      );
+      err.status = 400;
+      return next(err);
+    }
+
+    admin.name = trimmedName;
+    admin.email = normalizedEmail;
+
+    await admin.save();
+
+    const safeUser = await User.findById(
+      admin._id
     ).select('-password');
 
     res.status(200).json({
@@ -349,4 +424,5 @@ module.exports = {
   getUsers,
   deleteUser,
   updateSupplierProfile,
+  updateAdminProfile,
 };
