@@ -41,8 +41,8 @@ const ANSWER_KEYS = ['A', 'B', 'C', 'D']
  * `answers` state, same as before, and are only ever sent to the server
  * once, at final submission.
  *
- * Submission race guard: both the manual "Submit Quiz" button and the
- * timer's onExpire call the same `submit` function. `submittingRef` (not
+ * Submission race guard: both manual submit buttons and the timer's
+ * onExpire call the same `submit` function. `submittingRef` (not
  * state — a state check inside an event handler can still read a stale
  * value from before React re-renders) is set synchronously the instant
  * either path starts, so if the timer expires in the same tick as the
@@ -54,6 +54,21 @@ const ANSWER_KEYS = ['A', 'B', 'C', 'D']
  * comment on its status check and Result.js's unique index on
  * quizAttempt — this ref is a UX nicety that avoids a pointless duplicate
  * request, not the actual guarantee against a double submission.)
+ *
+ * Unanswered-question guard: `handleManualSubmit` wraps `submit` and is
+ * what both on-screen buttons call. If any question is still unanswered
+ * it blocks the request, surfaces `incompleteError`, and jumps the user
+ * to the first unanswered question rather than posting a partial
+ * attempt. This check is deliberately absent from `submit` itself,
+ * because `submit` is also what the countdown timer's onExpire calls on
+ * time-out — an expired attempt must still submit whatever was answered
+ * (the server grades unanswered questions as simply wrong; see
+ * quizAttemptController.js), not get stuck unable to submit at all past
+ * its own deadline. This is a client-side UX guard only; it has no
+ * server-side counterpart because the server already accepts partial
+ * answers by design (submitAttempt maps a missing questionId's answer to
+ * null and grades it as incorrect) — the two behaviors intentionally
+ * differ depending on whether time ran out or the user is still active.
  */
 const QuizAttempt = () => {
   const { categoryId, difficulty } = useParams()
@@ -71,6 +86,11 @@ const QuizAttempt = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState({}) // { [questionId]: 'A'|'B'|'C'|'D' }
   const [submitError, setSubmitError] = useState('')
+  // Distinct from submitError: this is a client-side block on the manual
+  // submit buttons (see handleManualSubmit below), not a failed request —
+  // so it's cleared as soon as the gap it's complaining about closes,
+  // rather than waiting on a fresh submit attempt like submitError does.
+  const [incompleteError, setIncompleteError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const submittingRef = useRef(false)
@@ -143,6 +163,27 @@ const QuizAttempt = () => {
     }
   }, [attempt, questions, navigate])
 
+  // Entry point for both on-screen submit buttons — never called directly
+  // by the timer (see this component's header comment on why the guard
+  // below must not apply to an on-expiry auto-submit).
+  const handleManualSubmit = useCallback(() => {
+    const firstUnanswered = (questions ?? []).findIndex((q) => !answersRef.current[q._id])
+
+    if (firstUnanswered !== -1) {
+      const remaining = questions.length - Object.keys(answersRef.current).length
+      setIncompleteError(
+        `Please answer all questions before submitting — ${remaining} question${
+          remaining === 1 ? ' is' : 's are'
+        } still unanswered.`
+      )
+      setCurrentIndex(firstUnanswered)
+      return
+    }
+
+    setIncompleteError('')
+    submit()
+  }, [questions, submit])
+
   // Seeded once, the instant `attempt` first loads (or resumes) — NOT
   // recomputed on every render, which would restart useCountdown's
   // interval every time this component re-renders (e.g. on every answer
@@ -199,6 +240,7 @@ const QuizAttempt = () => {
 
   const selectOption = (optionKey) => {
     setAnswers((prev) => ({ ...prev, [currentQuestion._id]: optionKey }))
+    setIncompleteError('')
   }
 
   const goTo = (index) => {
@@ -236,6 +278,12 @@ const QuizAttempt = () => {
           style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
         />
       </div>
+
+      {incompleteError && (
+        <p className="auth-error" role="alert">
+          {incompleteError}
+        </p>
+      )}
 
       {submitError && (
         <p className="auth-error" role="alert">
@@ -283,7 +331,7 @@ const QuizAttempt = () => {
               <button
                 type="button"
                 className="btn btn--success"
-                onClick={submit}
+                onClick={handleManualSubmit}
                 disabled={submitting}
               >
                 {submitting ? 'Submitting…' : 'Submit Quiz'}
@@ -346,7 +394,7 @@ const QuizAttempt = () => {
             type="button"
             className="btn btn--danger-ghost btn--full"
             style={{ marginTop: 16 }}
-            onClick={submit}
+            onClick={handleManualSubmit}
             disabled={submitting}
           >
             {submitting ? 'Submitting…' : 'Submit Now'}
