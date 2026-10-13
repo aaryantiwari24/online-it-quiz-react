@@ -117,11 +117,6 @@ app.use('/api/quiz-attempts', require('./routes/quizAttemptRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/stats', require('./routes/statsRoutes'));
 
-// --- Phase 10 addition ---
-// /api/faqs: public read, admin-only write — backs the new /faq page and
-// admin's "Manage FAQs" (see routes/faqRoutes.js). FAQ.js has existed
-// since Phase 1 with no route ever mounted for it until now.
-app.use('/api/faqs', require('./routes/faqRoutes'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

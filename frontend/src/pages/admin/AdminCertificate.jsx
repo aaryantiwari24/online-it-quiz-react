@@ -19,8 +19,8 @@ const AdminCertificate = () => {
 
     const load = async () => {
       try {
-        setError('')
         setErrorStatus(null)
+        setError('')
 
         // Load the result first
         const { data: resultData } = await api.get(
